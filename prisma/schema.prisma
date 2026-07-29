@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Producto {
+  id          String @id @default(cuid())
+  nombre      String
+  slug        String @unique
+  descripcion String @default("")
+  emoji       String @default("")
+  unidad      String @default("kg") // kg | unidad | malla
+
+  // Precios en CLP enteros. null = "no se vende en ese formato" -> no se muestra.
+  precioDetalle   Int?
+  precioMayorista Int?
+  precioCaja      Int?
+  precioBin       Int?
+
+  kilosPorCaja    Int?
+  kilosPorBin     Int?
+  umbralMayorista Int @default(10)
+
+  imagenTextura String @default("")
+  imagenRecorte String @default("")
+  colorAcento   String @default("#30CFB2")
+
+  activo    Boolean @default(true)
+  destacado Boolean @default(false)
+  orden     Int     @default(0)
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+model Usuario {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  nombre       String    @default("")
+  hashClave    String
+  rol          String    @default("admin") // admin | editor
+  creadoEn     DateTime  @default(now())
+  ultimoAcceso DateTime?
+}
+
+/// Correos autorizados a crearse una cuenta en /admin/registro.
+model CorreoAutorizado {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  nota        String    @default("")
+  usado       Boolean   @default(false)
+  invitadoPor String    @default("")
+  creadoEn    DateTime  @default(now())
+  usadoEn     DateTime?
+}
+
+model Mensaje {
+  id       String   @id @default(cuid())
+  nombre   String
+  email    String   @default("")
+  telefono String   @default("")
+  asunto   String   @default("Consulta")
+  mensaje  String
+  origen   String   @default("formulario") // formulario | whatsapp
+  /// Número de WhatsApp que recibió el mensaje, cuando el reparto tiene
+  /// varios. Vacío para los mensajes del formulario.
+  destino  String   @default("")
+  leido    Boolean  @default(false)
+  /// "Leído" es automático al abrirlo; "respondido" lo marca la persona a
+  /// mano, y es lo que sirve para saber qué queda pendiente de contestar.
+  respondido   Boolean   @default(false)
+  respondidoEn DateTime?
+  creadoEn DateTime @default(now())
+}
+
+/// Fila única (id = "sitio") con los textos y datos editables del sitio.
+model Ajustes {
+  id            String   @id @default("sitio")
+  nombreNegocio String   @default("La bodega de la economía")
+  eslogan       String   @default("Un emprendimiento local para locales, donde ahorrar es la única opción. Visítanos y encarga cuando quieras.")
+  direccion     String   @default("Cooperativa La Cruz, Malleco #4")
+  ciudad        String   @default("Rancagua")
+  telefono1     String   @default("+56995415039")
+  telefono2     String   @default("+56941877683")
+  whatsapp      String   @default("+56995415039")
+  /// Reparto de la burbuja: JSON [{ nombre, numero, peso }]. Si está vacío se
+  /// usa `whatsapp` como único destino. Los pesos son relativos entre sí.
+  numerosWhatsapp String @default("[]")
+  horario       String   @default("Lunes a sábado · 08:00 a 20:00")
+  descripcion   String   @default("Vendemos paltas, limones y naranjas al por mayor y al detalle. Traemos la fruta directo del productor y la dejamos al precio más conveniente de Rancagua, en cajas, bins o por kilo, para ferias, almacenes, restaurantes y para tu casa.")
+  mapaUrl       String   @default("")
+  galeria       String   @default("[]") // JSON array de rutas de imagen
+  actualizadoEn DateTime @updatedAt
+}

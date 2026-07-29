@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# uploads del admin
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# originales pesados (no se sirven, quedan solo en local)
+/assets-originales/*.png

@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
+@theme {
+  /* Marca */
+  --color-cyan-100: #e6faf5;
+  --color-cyan-200: #b8f0e4;
+  --color-cyan-300: #7fe3ce;
+  --color-cyan-400: #30cfb2;
+  --color-cyan-500: #1da38c;
+  --color-cyan-600: #1c8b7a;
+  --color-cyan-700: #146b5e;
+
+  /* Tono claro del verde de marca. El verde-700 de la portada es ilegible
+     sobre foto: sobre el fondo de limones no llega ni a 2:1. */
+  --color-verde-300: #3ddc97;
+  --color-verde-400: #12946a;
+  --color-verde-500: #0a7a54;
+  --color-verde-600: #076244;
+  --color-verde-700: #01452b;
+  --color-verde-palta: #224621;
+
+  --color-limon: #f5cd07;
+  --color-naranja: #fd7005;
+  /* Variante oscura para texto/fondos con texto encima sobre blanco: el
+     naranja de marca (#FD7005) da solo 2.8:1 de contraste, bajo el mínimo
+     AA de 4.5:1. Esta pasa (4.79:1) manteniendo el mismo matiz. */
+  --color-naranja-texto: #c24e00;
+  --color-crema: #fcf79d;
+
+  --color-tinta: #0b2b22;
+  --color-tinta-suave: #4a6a60;
+
+  /* Tipografía — variables inyectadas por next/font en layout.tsx */
+  --font-titulo: var(--font-archivo-black), "Arial Black", system-ui, sans-serif;
+  --font-cuerpo: var(--font-plus-jakarta), system-ui, -apple-system, sans-serif;
+
+  /* Escala fluida */
+  --text-hero: clamp(2.75rem, 11vw, 8rem);
+  --text-h2: clamp(2rem, 6vw, 4.5rem);
+  --text-h3: clamp(1.25rem, 3vw, 2rem);
+  --text-cuerpo: clamp(1rem, 1.6vw, 1.125rem);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Sombras — nunca negro puro, siempre teñidas de verde */
+  --shadow-suave: 0 2px 8px rgba(11, 43, 34, 0.06), 0 8px 24px rgba(11, 43, 34, 0.06);
+  --shadow-media: 0 4px 16px rgba(11, 43, 34, 0.08), 0 16px 48px rgba(11, 43, 34, 0.1);
+  --shadow-flotante: 0 24px 64px rgba(11, 43, 34, 0.18), 0 8px 20px rgba(11, 43, 34, 0.1);
+  --shadow-recorte: drop-shadow(0 24px 28px rgba(11, 43, 34, 0.28));
+
+  /* Curvas de easing */
+  --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-suave: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-rebote: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  overflow-x: hidden;
+  background: #ffffff;
+  color: var(--color-tinta);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-cuerpo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* El nav flotante mide ~68px: sin esto, al saltar a una sección por el
+   ancla el título queda escondido detrás de la píldora. */
+section[id] {
+  scroll-margin-top: 92px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-cyan-500);
+  outline-offset: 3px;
+}
+
+/* Slider de la calculadora: pista fina de 8px, área táctil de 44px, pulgar
+   que crece al arrastrar. El color de la pista se controla desde JS via la
+   variable --fondo-pista (gradiente verde->cyan o limón sólido si supera
+   el umbral mayorista). */
+.control-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  margin: 0;
+}
+.control-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fondo-pista, #e2e8f0);
+}
+.control-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fondo-pista, #e2e8f0);
+}
+.control-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--shadow-media);
+  cursor: pointer;
+  margin-top: -11px;
+  transition: width 0.15s ease, height 0.15s ease, margin-top 0.15s ease;
+}
+.control-slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--shadow-media);
+  border: none;
+  cursor: pointer;
+  transition: width 0.15s ease, height 0.15s ease;
+}
+.control-slider:active::-webkit-slider-thumb {
+  width: 34px;
+  height: 34px;
+  margin-top: -13px;
+}
+.control-slider:active::-moz-range-thumb {
+  width: 34px;
+  height: 34px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
