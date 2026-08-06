@@ -8,6 +8,8 @@ import { RESORTE_SCROLL, useEsMovil, useMovimientoReducido } from "@/lib/motion-
 type Props = {
   /** Foto de fondo a sangre. */
   imagen: string;
+  /** Variante recortada en vertical, se usa en vez de `imagen` bajo los 768px. */
+  imagenMovil?: string;
   blurDataURL?: string;
   /** Cuánto se desplaza el fondo respecto al scroll (0 = quieto). */
   profundidad?: number;
@@ -25,6 +27,7 @@ type Props = {
  */
 export default function FranjaParallax({
   imagen,
+  imagenMovil,
   blurDataURL,
   profundidad = 0.24,
   velo = 0.55,
@@ -65,7 +68,7 @@ export default function FranjaParallax({
         style={{ y: yFondo, scale: escalaFondo }}
       >
         <Image
-          src={imagen}
+          src={esMovil && imagenMovil ? imagenMovil : imagen}
           alt=""
           fill
           aria-hidden="true"

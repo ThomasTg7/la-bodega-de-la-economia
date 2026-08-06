@@ -77,7 +77,18 @@ export const esquemaAjustes = z.object({
     ),
   horario: z.string().trim().max(120).optional(),
   descripcion: z.string().trim().max(600).optional(),
-  mapaUrl: z.string().trim().max(500).optional(),
+  // Vacío = se arma solo con la dirección. Si viene algo, tiene que ser una
+  // URL completa: sin el https:// el navegador la tomaría como ruta interna
+  // del sitio y el botón "Cómo llegar" no llevaría a ninguna parte.
+  mapaUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => v === "" || /^https?:\/\/\S+$/i.test(v),
+      "El link del mapa tiene que empezar con https://"
+    )
+    .optional(),
   galeria: z.string().optional(),
 });
 

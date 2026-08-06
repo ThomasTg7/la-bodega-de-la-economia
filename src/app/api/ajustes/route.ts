@@ -21,7 +21,11 @@ export async function PATCH(request: NextRequest) {
   const cuerpo = await request.json().catch(() => null);
   const datos = esquemaAjustes.safeParse(cuerpo);
   if (!datos.success) {
-    return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
+    // El panel muestra este texto tal cual en el aviso, así que se manda el
+    // motivo concreto ("el link del mapa...") en vez de un "datos inválidos"
+    // que deja a la persona sin saber qué campo corregir.
+    const motivo = datos.error.issues[0]?.message;
+    return NextResponse.json({ error: motivo ?? "Datos inválidos." }, { status: 400 });
   }
 
   const ajustes = await db.ajustes.update({ where: { id: "sitio" }, data: datos.data });

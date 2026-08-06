@@ -30,6 +30,7 @@ export default function Cifras({ productos }: Props) {
   return (
     <FranjaParallax
       imagen="/texturas/naranjas.webp"
+      imagenMovil="/texturas/naranjas-movil.webp"
       blurDataURL={BLUR_TEXTURAS.naranjas}
       profundidad={0.38}
       velo={0.62}

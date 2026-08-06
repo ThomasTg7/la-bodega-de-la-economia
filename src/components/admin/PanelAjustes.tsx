@@ -160,12 +160,14 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
             />
             <CampoArea
               etiqueta="Eslogan de la portada"
+              ayuda="La frase que va bajo el título grande, en la primera pantalla."
               valor={datos.eslogan}
               onChange={(v) => actualizar("eslogan", v)}
               filas={2}
             />
             <CampoArea
               etiqueta="Descripción del local"
+              ayuda="El único párrafo de texto libre de la sección «Quiénes somos»."
               valor={datos.descripcion}
               onChange={(v) => actualizar("descripcion", v)}
               filas={3}
@@ -196,6 +198,7 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
             />
             <Campo
               etiqueta="Link de Google Maps (opcional)"
+              ayuda="A dónde lleva el botón «Cómo llegar». Déjalo vacío y se arma solo con la dirección de arriba. Si pegas uno, tiene que empezar con https://"
               valor={datos.mapaUrl}
               onChange={(v) => actualizar("mapaUrl", v)}
             />
@@ -341,11 +344,13 @@ function Campo({
 
 function CampoArea({
   etiqueta,
+  ayuda,
   valor,
   onChange,
   filas,
 }: {
   etiqueta: string;
+  ayuda?: string;
   valor: string;
   onChange: (v: string) => void;
   filas: number;
@@ -353,6 +358,7 @@ function CampoArea({
   return (
     <div>
       <label className="block text-sm font-semibold text-tinta">{etiqueta}</label>
+      {ayuda && <p className="mt-0.5 text-xs text-tinta-suave">{ayuda}</p>}
       <textarea
         rows={filas}
         value={valor}

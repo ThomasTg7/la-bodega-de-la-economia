@@ -14,6 +14,8 @@ import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
 
 type Props = {
   productoDestacado: Producto | null;
+  /** Campo "Eslogan de la portada" del panel. */
+  eslogan: string;
 };
 
 const SELLOS = [
@@ -34,7 +36,7 @@ const T = {
   precio: 2.15,
 };
 
-export default function Hero({ productoDestacado }: Props) {
+export default function Hero({ productoDestacado, eslogan }: Props) {
   const heroRef = useRef<HTMLElement>(null);
   const { abrir } = useBurbujaWhatsApp();
   const esMovil = useEsMovil();
@@ -72,7 +74,7 @@ export default function Hero({ productoDestacado }: Props) {
         style={{ y: yFondo, scale: escalaFondo }}
       >
         <Image
-          src="/texturas/paltas.webp"
+          src={esMovil ? "/texturas/paltas-movil.webp" : "/texturas/paltas.webp"}
           alt="Paltas Hass a granel en la bodega"
           fill
           priority
@@ -117,7 +119,13 @@ export default function Hero({ productoDestacado }: Props) {
           <h1
             className="mt-5 font-titulo text-white"
             style={{
-              fontSize: "clamp(2.6rem, 5.6vw, 5.5rem)",
+              // El piso fijo se probó hasta romper: "LA BODEGA" empieza a
+              // partirse en dos líneas por sobre ~57px en un iPhone de
+              // 414px, y por sobre ~49px en uno de 360px. El punto de
+              // quiebre está siempre cerca del 13.9% del ancho de pantalla;
+              // 13.6vw es lo más grande que cabe con margen en los tres
+              // anchos probados (360/375/414) sin partirse.
+              fontSize: "clamp(2.6rem, 13.6vw, 5.5rem)",
               lineHeight: 1.02,
               letterSpacing: "-0.015em",
               textShadow: "0 4px 30px rgba(0,0,0,.35)",
@@ -147,22 +155,23 @@ export default function Hero({ productoDestacado }: Props) {
             </span>
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: EASE_SALIDA, delay: 0.5 }}
-            className="mt-6 text-white/85"
-            style={{ fontSize: "var(--text-cuerpo)", lineHeight: 1.6, maxWidth: "46ch" }}
-          >
-            De un emprendimiento local a los locales de la zona. Háblanos cuando quieras y
-            te hacemos llegar tus productos.
-          </motion.p>
+          {eslogan.trim() && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: EASE_SALIDA, delay: 0.5 }}
+              className="mt-6 text-white/85"
+              style={{ fontSize: "var(--text-cuerpo)", lineHeight: 1.6, maxWidth: "46ch" }}
+            >
+              {eslogan}
+            </motion.p>
+          )}
         </motion.div>
 
         {/* Pizarra colgada: una palta y el precio por kilo. Nada más. */}
         <motion.aside
           style={{ y: yPizarra, rotate: rotarPizarra }}
-          className="relative mx-auto w-full max-w-[360px] md:mx-0 md:ml-auto md:max-w-[380px]"
+          className="relative mx-auto w-full max-w-[280px] md:mx-0 md:ml-auto md:max-w-[380px]"
         >
           {/* Capa 1 — el tablero baja y queda colgando de los dos tornillos */}
           <motion.div
@@ -199,7 +208,7 @@ export default function Hero({ productoDestacado }: Props) {
 
                 {/* Tablero de tiza */}
                 <div
-                  className="relative overflow-hidden rounded-[5px] px-6 pt-7 pb-6 text-center sm:px-7"
+                  className="relative overflow-hidden rounded-[5px] px-5 pt-6 pb-5 text-center sm:px-7 sm:pt-7 sm:pb-6"
                   style={{
                     background: "linear-gradient(158deg, #1a3a2f 0%, #0c1e18 55%, #142d25 100%)",
                     boxShadow: "inset 0 0 70px rgba(0,0,0,.7), inset 0 2px 0 rgba(255,255,255,.05)",

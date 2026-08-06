@@ -10,6 +10,7 @@ export default function FranjaAhorro() {
   return (
     <FranjaParallax
       imagen="/texturas/limones.webp"
+      imagenMovil="/texturas/limones-movil.webp"
       blurDataURL={BLUR_TEXTURAS.limones}
       profundidad={0.45}
       velo={0.62}

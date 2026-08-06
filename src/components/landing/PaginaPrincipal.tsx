@@ -5,7 +5,6 @@ import SmoothScroll from "@/components/motion/SmoothScroll";
 import { ProveedorBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { parsearNumerosWhatsapp } from "@/lib/whatsapp";
 import NavFlotante from "./NavFlotante";
-import IntroOverlay from "./IntroOverlay";
 import Hero from "./Hero";
 import FranjaAhorro from "./FranjaAhorro";
 import Catalogo from "./Catalogo";
@@ -29,10 +28,9 @@ export default function PaginaPrincipal({ productos, ajustes }: Props) {
   return (
     <SmoothScroll>
       <ProveedorBurbujaWhatsApp>
-        <IntroOverlay />
         <NavFlotante />
         <main>
-          <Hero productoDestacado={productoDestacado} />
+          <Hero productoDestacado={productoDestacado} eslogan={ajustes.eslogan} />
           <FranjaAhorro />
           <Catalogo productos={productos} />
           <Calculadora productos={productos} />

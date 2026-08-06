@@ -31,16 +31,31 @@ function galeriaDe(ajustes: Ajustes): string[] {
   return GALERIA_RESPALDO;
 }
 
+/**
+ * A dónde apunta el botón "Cómo llegar".
+ *
+ * Manda el link del panel si lo hay. Se exige http(s) a propósito: un valor a
+ * medio pegar ("maps.app.goo.gl/xxx", "www.google.com/...") saldría como ruta
+ * relativa del propio sitio y el botón llevaría a una página que no existe.
+ * En ese caso vale más el link armado con la dirección, que siempre funciona.
+ *
+ * El de respaldo es de indicaciones, no de búsqueda: el botón dice "Cómo
+ * llegar", así que abre Google Maps con la ruta ya trazada desde donde esté
+ * la persona.
+ */
+function linkComoLlegar(ajustes: Ajustes): string {
+  const propio = ajustes.mapaUrl.trim();
+  if (/^https?:\/\//i.test(propio)) return propio;
+
+  const destino = encodeURIComponent(`${ajustes.direccion}, ${ajustes.ciudad}, Chile`);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destino}`;
+}
+
 export default function QuienesSomos({ ajustes }: Props) {
   const fotos = galeriaDe(ajustes);
   const pistaRef = useRef<HTMLDivElement>(null);
   const telefonos = [ajustes.telefono1, ajustes.telefono2].filter(Boolean);
-
-  const destino = encodeURIComponent(`${ajustes.direccion}, ${ajustes.ciudad}, Chile`);
-  // Link de indicaciones, no de búsqueda: el botón dice "Cómo llegar", así que
-  // abre el navegador con la ruta ya trazada desde donde esté la persona.
-  const comoLlegar =
-    ajustes.mapaUrl || `https://www.google.com/maps/dir/?api=1&destination=${destino}`;
+  const comoLlegar = linkComoLlegar(ajustes);
 
   return (
     <section
@@ -62,19 +77,18 @@ export default function QuienesSomos({ ajustes }: Props) {
             <TextoRevelado texto="Una bodega, no un intermediario" modo="palabra" as="span" />
           </h2>
 
-          <SeccionEntrada delay={0.1}>
-            <p
-              className="mt-6 text-tinta-suave"
-              style={{ fontSize: "var(--text-cuerpo)", lineHeight: 1.65 }}
-            >
-              {ajustes.descripcion}
-            </p>
-            <p className="mt-4 text-tinta-suave" style={{ lineHeight: 1.65 }}>
-              Acá no hay catálogo de mil productos. Hay pocas líneas, bien elegidas y con
-              rotación diaria, para que lo que llega a tu local esté en el punto justo. Si
-              necesitas algo que no tenemos en vitrina, lo conseguimos y te lo cotizamos.
-            </p>
-          </SeccionEntrada>
+          {/* Único texto libre de la sección: sale entero de "Descripción del
+              local" en el panel. Si se deja vacío, no queda un hueco. */}
+          {ajustes.descripcion.trim() && (
+            <SeccionEntrada delay={0.1}>
+              <p
+                className="mt-6 whitespace-pre-line text-tinta-suave"
+                style={{ fontSize: "var(--text-cuerpo)", lineHeight: 1.65 }}
+              >
+                {ajustes.descripcion}
+              </p>
+            </SeccionEntrada>
+          )}
 
           {/* Ficha de dirección: lo primero que busca alguien que quiere venir */}
           <SeccionEntrada delay={0.15}>
