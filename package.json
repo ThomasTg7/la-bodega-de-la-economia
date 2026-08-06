@@ -2,6 +2,9 @@
   "name": "la-bodega-de-la-economia",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +15,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "imagenes": "python scripts/preparar-imagenes.py",
-    "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts"
+    "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts",
+    "migrar": "tsx --env-file=.env.production.local scripts/migrar-sqlite-a-postgres.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -34,7 +38,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
+    "@types/node": "^24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

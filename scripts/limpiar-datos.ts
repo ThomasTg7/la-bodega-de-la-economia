@@ -2,8 +2,8 @@
  * Mantenimiento periódico de la bodega:
  *
  *   1. Borra los mensajes del formulario más viejos que N días (90 por defecto).
- *   2. Borra las imágenes de public/uploads/ que ya no usa ningún producto ni
- *      la galería del local.
+ *   2. Borra las imágenes de Vercel Blob que ya no usa ningún producto ni la
+ *      galería del local.
  *
  * Por seguridad NO borra nada a menos que le pases --aplicar: sin esa bandera
  * solo muestra el informe de qué haría. Así, si alguien lo corre por
@@ -12,15 +12,20 @@
  *   npm run limpiar                      # informe, no toca nada
  *   npm run limpiar -- --aplicar         # borra de verdad
  *   npm run limpiar -- --dias=180 --aplicar
+ *
+ * Apunta a la base y al Blob que digan DATABASE_URL y BLOB_READ_WRITE_TOKEN.
+ * Para correrlo contra producción: `npx vercel env pull .env.production.local`
+ * y después `npx tsx --env-file=.env.production.local scripts/limpiar-datos.ts`.
  */
 
 import { PrismaClient } from "@prisma/client";
-import { readdir, stat, unlink } from "node:fs/promises";
-import path from "node:path";
+import { list, del } from "@vercel/blob";
 
 const DIAS_POR_DEFECTO = 90;
 /** Un archivo recién subido puede estar esperando que aprieten "Guardar". */
 const GRACIA_HORAS = 24;
+/** Carpeta del Blob donde deja las fotos /api/upload. */
+const PREFIJO_BLOB = "productos/";
 
 const db = new PrismaClient();
 
@@ -72,13 +77,25 @@ async function limpiarMensajes(dias: number, aplicar: boolean) {
 }
 
 async function limpiarImagenes(aplicar: boolean) {
-  const carpeta = path.join(process.cwd(), "public", "uploads");
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log(
+      "\n── Imágenes\n   Falta BLOB_READ_WRITE_TOKEN, así que no puedo mirar el Blob. Me salto esta parte."
+    );
+    return 0;
+  }
 
-  let archivos: string[];
-  try {
-    archivos = await readdir(carpeta);
-  } catch {
-    console.log("\n── Imágenes\n   No existe public/uploads/ todavía. Nada que revisar.");
+  // El Blob se pagina; sin recorrer el cursor hasta el final se dejarían
+  // archivos fuera del inventario y parecerían "en uso" para siempre.
+  const archivos: { pathname: string; url: string; size: number; uploadedAt: Date }[] = [];
+  let cursor: string | undefined;
+  do {
+    const pagina = await list({ prefix: PREFIJO_BLOB, cursor, limit: 1000 });
+    archivos.push(...pagina.blobs);
+    cursor = pagina.hasMore ? pagina.cursor : undefined;
+  } while (cursor);
+
+  if (archivos.length === 0) {
+    console.log("\n── Imágenes\n   El Blob está vacío. Nada que revisar.");
     return 0;
   }
 
@@ -89,16 +106,20 @@ async function limpiarImagenes(aplicar: boolean) {
     db.ajustes.findUnique({ where: { id: "sitio" }, select: { galeria: true } }),
   ]);
 
+  // Se comparan URLs completas, no nombres de archivo: el Blob le agrega un
+  // sufijo aleatorio a cada subida, así que el nombre por sí solo ya no
+  // identifica nada. Las rutas que empiezan con "/" son archivos estáticos de
+  // public/ y no viven en el Blob, así que se ignoran.
   const enUso = new Set<string>();
   for (const p of productos) {
-    if (p.imagenTextura) enUso.add(path.basename(p.imagenTextura));
-    if (p.imagenRecorte) enUso.add(path.basename(p.imagenRecorte));
+    if (p.imagenTextura.startsWith("http")) enUso.add(p.imagenTextura);
+    if (p.imagenRecorte.startsWith("http")) enUso.add(p.imagenRecorte);
   }
   try {
     const galeria = JSON.parse(ajustes?.galeria ?? "[]");
     if (Array.isArray(galeria)) {
       for (const foto of galeria) {
-        if (typeof foto === "string" && foto) enUso.add(path.basename(foto));
+        if (typeof foto === "string" && foto.startsWith("http")) enUso.add(foto);
       }
     }
   } catch {
@@ -108,19 +129,17 @@ async function limpiarImagenes(aplicar: boolean) {
   }
 
   const limiteGracia = Date.now() - GRACIA_HORAS * 60 * 60 * 1000;
-  const huerfanas: { nombre: string; peso: number }[] = [];
+  const huerfanas: { nombre: string; url: string; peso: number }[] = [];
 
-  for (const nombre of archivos) {
-    if (enUso.has(nombre)) continue;
-    const info = await stat(path.join(carpeta, nombre));
-    if (!info.isFile()) continue;
+  for (const archivo of archivos) {
+    if (enUso.has(archivo.url)) continue;
     // Recién subida: puede estar en un formulario todavía sin guardar.
-    if (info.mtimeMs > limiteGracia) continue;
-    huerfanas.push({ nombre, peso: info.size });
+    if (archivo.uploadedAt.getTime() > limiteGracia) continue;
+    huerfanas.push({ nombre: archivo.pathname, url: archivo.url, peso: archivo.size });
   }
 
   const total = huerfanas.reduce((suma, h) => suma + h.peso, 0);
-  console.log(`\n── Imágenes sueltas en public/uploads (${archivos.length} archivos en total)`);
+  console.log(`\n── Imágenes sueltas en el Blob (${archivos.length} archivos en total)`);
 
   if (huerfanas.length === 0) {
     console.log("   Ninguna sobra. Todas están en uso.");
@@ -133,8 +152,10 @@ async function limpiarImagenes(aplicar: boolean) {
   if (huerfanas.length > 10) console.log(`   · … y ${huerfanas.length - 10} más`);
 
   if (aplicar) {
-    for (const h of huerfanas) {
-      await unlink(path.join(carpeta, h.nombre));
+    // `del` acepta el lote completo, pero se manda de a poco para no armar una
+    // petición gigante si algún día hay miles de archivos sueltos.
+    for (let i = 0; i < huerfanas.length; i += 100) {
+      await del(huerfanas.slice(i, i + 100).map((h) => h.url));
     }
     console.log(`   ${huerfanas.length} archivos borrados, ${pesoLegible(total)} liberados.`);
   } else {
