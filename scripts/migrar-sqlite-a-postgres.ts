@@ -138,7 +138,7 @@ async function migrarTabla(
     } as never);
   }
 
-  console.log(`   ${filas.length} filas copiadas a Postgres.`);
+  console.log(`   ${filas.length} ${plural(filas.length)} copiada${filas.length === 1 ? "" : "s"} a Postgres.`);
   return filas.length;
 }
 

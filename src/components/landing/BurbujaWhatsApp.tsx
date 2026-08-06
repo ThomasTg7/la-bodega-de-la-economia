@@ -41,7 +41,6 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
   const { abierta, prellenado, abrir, cerrar } = useBurbujaWhatsApp();
   const fabRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const primerCampoRef = useRef<HTMLInputElement>(null);
 
   const [entrada, setEntrada] = useState(false);
   const [tooltip, setTooltip] = useState(false);
@@ -136,9 +135,14 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
     return () => window.removeEventListener("keydown", manejar);
   }, [abierta, cerrar]);
 
+  // Al abrir se enfoca el panel, no el campo "Tu nombre": enfocar un input
+  // por código levanta el teclado en iOS apenas se toca el botón, tapando
+  // media pantalla antes de que la persona alcance a leer el saludo. El
+  // panel lleva tabIndex={-1} para poder recibir el foco, así el lector de
+  // pantalla igual entra al diálogo y el primer Tab cae en el primer campo.
   useEffect(() => {
     if (abierta) {
-      primerCampoRef.current?.focus();
+      panelRef.current?.focus();
     } else {
       fabRef.current?.focus();
     }
@@ -242,6 +246,7 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
             role="dialog"
             aria-modal="true"
             aria-labelledby="burbuja-whatsapp-titulo"
+            tabIndex={-1}
             initial={{ scale: 0.8, opacity: 0, y: 24 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 24, transition: { duration: 0.22 } }}
@@ -253,7 +258,7 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
               width: "min(360px, calc(100vw - 24px))",
               maxHeight: "78svh",
             }}
-            className="fixed z-[60] flex flex-col overflow-hidden rounded-[22px] bg-white shadow-[var(--shadow-flotante)]"
+            className="fixed z-[60] flex flex-col overflow-hidden rounded-[22px] bg-white shadow-[var(--shadow-flotante)] outline-none"
           >
             {/* Cabecera */}
             <div className="flex items-center gap-3 px-4 py-3" style={{ background: "#075E54" }}>
@@ -303,14 +308,17 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
 
             {/* Formulario */}
             <form onSubmit={manejarEnvio} className="space-y-3 border-t border-tinta/10 bg-white p-4">
+              {/* text-base (16px) en móvil a propósito: Safari en iOS hace
+                  zoom sobre cualquier campo con fuente menor, y no vuelve a
+                  alejarse solo. Desde sm: vuelve a 14px, que es el tamaño
+                  con el que está diseñado el panel en escritorio. */}
               <input
-                ref={primerCampoRef}
                 type="text"
                 required
                 placeholder="Tu nombre"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
-                className="w-full rounded-xl border border-tinta/15 px-3 py-2.5 text-sm outline-none focus:border-cyan-400"
+                className="w-full rounded-xl border border-tinta/15 px-3 py-2.5 text-base outline-none focus:border-cyan-400 sm:text-sm"
               />
 
               <div className="grid grid-cols-3 gap-1.5">
@@ -340,7 +348,7 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
                   setMensaje(e.target.value);
                   autoRedimensionar();
                 }}
-                className="w-full resize-none rounded-xl border border-tinta/15 px-3 py-2.5 text-sm outline-none focus:border-cyan-400"
+                className="w-full resize-none rounded-xl border border-tinta/15 px-3 py-2.5 text-base outline-none focus:border-cyan-400 sm:text-sm"
               />
 
               <button
