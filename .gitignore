@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# el ejemplo sí se versiona: solo lleva placeholders y es la referencia de qué
+# variables hay que definir en Vercel y en local
+!.env.example
 
 # vercel
 .vercel

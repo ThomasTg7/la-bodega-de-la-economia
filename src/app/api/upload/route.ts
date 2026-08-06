@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
+import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { leerSesion } from "@/lib/sesion";
 
@@ -55,9 +54,6 @@ export async function POST(request: NextRequest) {
   // va fácil sobre 1 MB; el mismo WebP queda en decenas de KB.
   const nombreArchivo = `${base}-${Date.now()}.webp`;
 
-  const carpetaUploads = path.join(process.cwd(), "public", "uploads");
-  await mkdir(carpetaUploads, { recursive: true });
-
   let procesada: Buffer;
   let tieneAlfa = false;
   let ancho: number | undefined;
@@ -94,11 +90,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await writeFile(path.join(carpetaUploads, nombreArchivo), procesada);
+  // En Vercel el disco es de solo lectura, así que la imagen no puede quedar
+  // en /public: se sube a Blob y lo que se guarda en la base es la URL
+  // absoluta que devuelve. El sufijo aleatorio evita el error por nombre
+  // repetido si dos subidas caen en el mismo milisegundo.
+  let subida: Awaited<ReturnType<typeof put>>;
+  try {
+    subida = await put(`productos/${nombreArchivo}`, procesada, {
+      access: "public",
+      contentType: "image/webp",
+      addRandomSuffix: true,
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "No se pudo guardar la imagen. Inténtalo de nuevo." },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json(
     {
-      url: `/uploads/${nombreArchivo}`,
+      url: subida.url,
       tieneAlfa,
       ancho,
       alto,
