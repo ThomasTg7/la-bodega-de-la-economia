@@ -4,6 +4,7 @@ import type { Producto, Ajustes } from "@prisma/client";
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import { ProveedorBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { parsearNumerosWhatsapp } from "@/lib/whatsapp";
+import { linkMapa } from "@/lib/mapa";
 import NavFlotante from "./NavFlotante";
 import Hero from "./Hero";
 import FranjaAhorro from "./FranjaAhorro";
@@ -30,7 +31,11 @@ export default function PaginaPrincipal({ productos, ajustes }: Props) {
       <ProveedorBurbujaWhatsApp>
         <NavFlotante />
         <main>
-          <Hero productoDestacado={productoDestacado} eslogan={ajustes.eslogan} />
+          <Hero
+            productoDestacado={productoDestacado}
+            eslogan={ajustes.eslogan}
+            mapaUrl={linkMapa(ajustes)}
+          />
           <FranjaAhorro />
           <Catalogo productos={productos} />
           <Calculadora productos={productos} />

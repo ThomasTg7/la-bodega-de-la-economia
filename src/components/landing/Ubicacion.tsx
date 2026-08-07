@@ -6,6 +6,7 @@ import TextoRevelado from "@/components/motion/TextoRevelado";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import CarruselFotos from "./CarruselFotos";
 import { formatearTelefonoChile } from "@/lib/whatsapp";
+import { linkMapa } from "@/lib/mapa";
 
 type Props = { ajustes: Ajustes };
 
@@ -23,11 +24,7 @@ function galeriaDe(ajustes: Ajustes): string[] {
 
 export default function Ubicacion({ ajustes }: Props) {
   const fotos = galeriaDe(ajustes);
-  const mapaUrl =
-    ajustes.mapaUrl ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      `${ajustes.direccion}, ${ajustes.ciudad}`
-    )}`;
+  const mapaUrl = linkMapa(ajustes);
 
   return (
     <section

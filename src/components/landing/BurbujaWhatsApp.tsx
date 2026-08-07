@@ -256,7 +256,12 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
               right: 20,
               bottom: "calc(96px + env(safe-area-inset-bottom))",
               width: "min(360px, calc(100vw - 24px))",
-              maxHeight: "78svh",
+              // El techo se calcula contra el hueco real que queda sobre el
+              // FAB (los mismos 96px del `bottom`, más 24 de aire arriba) en
+              // vez de un porcentaje fijo. Con 78svh el panel cabía justo en
+              // un iPhone grande pero en uno chico se pasaba, y lo que se
+              // comprimía era el mensaje.
+              maxHeight: "calc(100svh - 120px - env(safe-area-inset-bottom))",
             }}
             className="fixed z-[60] flex flex-col overflow-hidden rounded-[22px] bg-white shadow-[var(--shadow-flotante)] outline-none"
           >
@@ -273,9 +278,12 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
               </div>
             </div>
 
-            {/* Cuerpo */}
+            {/* Cuerpo. El min-height es lo que garantiza que el saludo se lea
+                entero: sin él, el formulario se queda con todo el alto que
+                pide y en un teléfono el mensaje quedaba reducido a dos
+                líneas con scroll. */}
             <div
-              className="flex-1 overflow-y-auto px-4 py-4"
+              className="min-h-[150px] flex-1 overflow-y-auto px-4 py-3 sm:min-h-[130px] sm:py-4"
               style={{ background: "#ECE5DD" }}
             >
               {!mostrarMensaje ? (
@@ -307,7 +315,10 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
             </div>
 
             {/* Formulario */}
-            <form onSubmit={manejarEnvio} className="space-y-3 border-t border-tinta/10 bg-white p-4">
+            <form
+              onSubmit={manejarEnvio}
+              className="space-y-2.5 border-t border-tinta/10 bg-white px-4 py-3 sm:space-y-3 sm:p-4"
+            >
               {/* text-base (16px) en móvil a propósito: Safari en iOS hace
                   zoom sobre cualquier campo con fuente menor, y no vuelve a
                   alejarse solo. Desde sm: vuelve a 14px, que es el tamaño
@@ -321,27 +332,35 @@ export default function BurbujaWhatsApp({ numeros }: { numeros: NumeroWhatsApp[]
                 className="w-full rounded-xl border border-tinta/15 px-3 py-2.5 text-base outline-none focus:border-cyan-400 sm:text-sm"
               />
 
-              <div className="grid grid-cols-3 gap-1.5">
+              {/* Antes eran seis botones en una grilla de 3×2, que en un
+                  teléfono se comían dos filas del panel y dejaban el saludo
+                  sin espacio. Un select nativo ocupa una sola fila y encima
+                  abre la rueda de selección de iOS, que es más cómoda que
+                  apuntarle a un chip chico. */}
+              <select
+                aria-label="Asunto"
+                value={asunto}
+                onChange={(e) => setAsunto(e.target.value)}
+                className="w-full appearance-none rounded-xl border border-tinta/15 bg-white bg-[length:11px] bg-[right:0.9rem_center] bg-no-repeat py-2.5 pr-9 pl-3 text-base text-tinta outline-none focus:border-cyan-400 sm:text-sm"
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%230b2b22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1.5 6 6.5 11 1.5'/></svg>\")",
+                }}
+              >
                 {ASUNTOS_WHATSAPP.map((a) => (
-                  <button
-                    key={a}
-                    type="button"
-                    onClick={() => setAsunto(a)}
-                    className={
-                      asunto === a
-                        ? "flex min-h-11 items-center justify-center rounded-full bg-verde-600 px-2 text-xs font-semibold text-white"
-                        : "flex min-h-11 items-center justify-center rounded-full border border-tinta/15 px-2 text-xs font-medium text-tinta-suave"
-                    }
-                  >
+                  <option key={a} value={a}>
                     {a}
-                  </button>
+                  </option>
                 ))}
-              </div>
+              </select>
 
+              {/* Dos filas y no tres: el campo crece solo al escribir
+                  (autoRedimensionar), así que las filas de más solo le
+                  quitaban alto al mensaje antes de que nadie escribiera. */}
               <textarea
                 ref={textareaRef}
                 required
-                rows={3}
+                rows={2}
                 placeholder="Escribe tu mensaje..."
                 value={mensaje}
                 onChange={(e) => {

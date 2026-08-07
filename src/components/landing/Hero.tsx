@@ -16,6 +16,8 @@ type Props = {
   productoDestacado: Producto | null;
   /** Campo "Eslogan de la portada" del panel. */
   eslogan: string;
+  /** Ya resuelto con linkMapa(): el link del panel o la búsqueda por dirección. */
+  mapaUrl: string;
 };
 
 const SELLOS = [
@@ -36,7 +38,7 @@ const T = {
   precio: 2.15,
 };
 
-export default function Hero({ productoDestacado, eslogan }: Props) {
+export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
   const heroRef = useRef<HTMLElement>(null);
   const { abrir } = useBurbujaWhatsApp();
   const esMovil = useEsMovil();
@@ -348,11 +350,27 @@ export default function Hero({ productoDestacado, eslogan }: Props) {
 
           <BotonSuave
             como="a"
-            href="#catalogo"
+            href={mapaUrl}
+            externo
             delay={0.8}
-            className="justify-center border-2 border-white/50 px-5 py-3.5 text-sm text-white sm:px-8 sm:py-4 sm:text-base"
+            className="justify-center gap-2 border-2 border-white/50 px-5 py-3.5 text-sm text-white sm:px-8 sm:py-4 sm:text-base"
           >
-            Ver productos
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="shrink-0"
+            >
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Cómo llegar
           </BotonSuave>
         </motion.div>
 
@@ -405,6 +423,7 @@ export default function Hero({ productoDestacado, eslogan }: Props) {
 function BotonSuave({
   como,
   href,
+  externo = false,
   onClick,
   delay,
   className = "",
@@ -412,6 +431,8 @@ function BotonSuave({
 }: {
   como: "a" | "button";
   href?: string;
+  /** Abre en pestaña nueva. Para los anclas internas (#seccion) va en false. */
+  externo?: boolean;
   onClick?: () => void;
   delay: number;
   className?: string;
@@ -429,7 +450,13 @@ function BotonSuave({
 
   if (como === "a") {
     return (
-      <motion.a href={href} {...comun} whileHover={encima} whileTap={tocado}>
+      <motion.a
+        href={href}
+        {...(externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        {...comun}
+        whileHover={encima}
+        whileTap={tocado}
+      >
         {children}
       </motion.a>
     );
