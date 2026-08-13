@@ -11,9 +11,9 @@ export type DatosVista = {
   nombre: string;
   descripcion: string;
   unidad: string;
-  precioDetalle: number | null;
-  precioMayorista: number | null;
-  umbralMayorista: number;
+  precioBase: number | null;
+  precioDescuento: number | null;
+  kilosDescuento: number;
   imagenTextura: string;
   imagenRecorte: string;
   colorAcento: string;
@@ -102,8 +102,10 @@ export default function VistaPrevia({ datos }: { datos: DatosVista }) {
 
 /** Réplica de la tarjeta del catálogo de la página. */
 function VistaCatalogo({ datos }: { datos: DatosVista }) {
-  const precioGrande = datos.precioMayorista ?? datos.precioDetalle;
-  const hayDosPrecios = datos.precioMayorista != null && datos.precioDetalle != null;
+  // Mismo criterio que TarjetaProducto: manda el precio de lista y el
+  // descuento va al lado. Si acá se desalinea, la vista previa miente.
+  const precioGrande = datos.precioBase ?? datos.precioDescuento;
+  const hayDescuento = datos.precioDescuento != null && datos.precioBase != null;
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-tinta/10 bg-white shadow-[var(--shadow-media)]">
@@ -133,7 +135,7 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
           <div className="mt-4 flex items-end justify-between gap-3 border-t border-dashed border-tinta/20 pt-4">
             <div>
               <p className="text-[0.6rem] font-bold tracking-[0.14em] text-verde-500 uppercase">
-                Por mayor · {datos.umbralMayorista}+ {datos.unidad}
+                Precio por {datos.unidad}
               </p>
               <p className="mt-1 flex items-baseline gap-1">
                 <span
@@ -145,12 +147,14 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
                 <span className="text-xs font-semibold text-tinta-suave">/{datos.unidad}</span>
               </p>
             </div>
-            {hayDosPrecios && (
-              <div className="text-right">
-                <p className="text-[0.6rem] font-bold tracking-[0.14em] text-tinta-suave uppercase">
-                  Detalle
+            {hayDescuento && (
+              <div className="rounded-lg bg-limon/20 px-2.5 py-1.5 text-right">
+                <p className="text-[0.6rem] font-bold tracking-[0.14em] text-verde-700 uppercase">
+                  Desde {datos.kilosDescuento} {datos.unidad}
                 </p>
-                <p className="text-sm font-semibold text-tinta">{clp(datos.precioDetalle!)}</p>
+                <p className="text-sm font-semibold text-verde-700">
+                  {clp(datos.precioDescuento!)}
+                </p>
               </div>
             )}
           </div>
@@ -166,8 +170,8 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
 
 /** Réplica de la columna izquierda de la calculadora de la página. */
 function VistaCalculadora({ datos }: { datos: DatosVista }) {
-  const kilos = datos.umbralMayorista;
-  const precio = datos.precioMayorista ?? datos.precioDetalle;
+  const kilos = datos.kilosDescuento;
+  const precio = datos.precioDescuento ?? datos.precioBase;
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-tinta/10 bg-white p-5 shadow-[var(--shadow-media)]">

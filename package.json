@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/generar-cliente.mjs",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
@@ -16,7 +16,12 @@
     "db:studio": "prisma studio",
     "imagenes": "python scripts/preparar-imagenes.py",
     "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts",
-    "migrar": "tsx --env-file=.env.production.local scripts/migrar-sqlite-a-postgres.ts"
+    "migrar": "tsx --env-file=.env.production.local scripts/migrar-sqlite-a-postgres.ts",
+    "schema:mariadb": "node scripts/generar-schema-mariadb.mjs",
+    "db:push:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma db push --schema prisma/schema.mariadb.prisma",
+    "db:seed:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma db seed --schema prisma/schema.mariadb.prisma",
+    "db:studio:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma studio --schema prisma/schema.mariadb.prisma",
+    "textos": "tsx --env-file=.env scripts/actualizar-textos.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

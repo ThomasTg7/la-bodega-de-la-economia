@@ -21,7 +21,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "La bodega de la economía — Paltas, limones y naranjas en Rancagua",
   description:
-    "Un emprendimiento local para locales, donde ahorrar es la única opción. Paltas, limones y naranjas al por mayor y al detalle en Rancagua.",
+    "Un emprendimiento local para locales, donde ahorrar es la única opción. Paltas, limones y naranjas siempre al por mayor en Rancagua, con descuento por volumen.",
 };
 
 export const viewport: Viewport = {

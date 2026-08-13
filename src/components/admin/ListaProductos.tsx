@@ -154,15 +154,15 @@ function FilaProducto({
 
       <div className="hidden text-right text-sm sm:block">
         <p className="text-tinta-suave">
-          Detalle{" "}
+          Por mayor{" "}
           <span className="font-semibold text-tinta">
-            {producto.precioDetalle != null ? clp(producto.precioDetalle) : "—"}
+            {producto.precioBase != null ? clp(producto.precioBase) : "—"}
           </span>
         </p>
         <p className="text-tinta-suave">
-          Mayorista{" "}
+          Desde {producto.kilosDescuento} {producto.unidad}{" "}
           <span className="font-semibold text-tinta">
-            {producto.precioMayorista != null ? clp(producto.precioMayorista) : "—"}
+            {producto.precioDescuento != null ? clp(producto.precioDescuento) : "—"}
           </span>
         </p>
       </div>

@@ -10,6 +10,7 @@ import { useToast } from "./Toast";
 import { Icono } from "./Iconos";
 import { RESORTE_UI, useMovimientoReducido } from "@/lib/motion-config";
 import { parsearNumerosWhatsapp, type NumeroWhatsApp } from "@/lib/whatsapp";
+import { parsearSellos, SELLOS_DEFECTO } from "@/lib/portada";
 
 type Datos = {
   nombreNegocio: string;
@@ -22,6 +23,8 @@ type Datos = {
   horario: string;
   descripcion: string;
   mapaUrl: string;
+  catalogoTitulo: string;
+  catalogoBajada: string;
 };
 
 function parsearGaleria(json: string): string[] {
@@ -50,10 +53,13 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
     horario: inicial.horario,
     descripcion: inicial.descripcion,
     mapaUrl: inicial.mapaUrl,
+    catalogoTitulo: inicial.catalogoTitulo,
+    catalogoBajada: inicial.catalogoBajada,
   };
 
   const [datos, setDatos] = useState<Datos>(datosIniciales);
   const [galeria, setGaleria] = useState<string[]>(parsearGaleria(inicial.galeria));
+  const [sellos, setSellos] = useState<string[]>(parsearSellos(inicial.portadaSellos));
   const [numeros, setNumeros] = useState<NumeroWhatsApp[]>(
     parsearNumerosGuardados(inicial.numerosWhatsapp)
   );
@@ -61,6 +67,7 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
     JSON.stringify({
       datos: datosIniciales,
       galeria: parsearGaleria(inicial.galeria),
+      sellos: parsearSellos(inicial.portadaSellos),
       numeros: parsearNumerosGuardados(inicial.numerosWhatsapp),
     })
   );
@@ -74,8 +81,8 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
   const resorte = reducido ? { duration: 0 } : { type: "spring" as const, ...RESORTE_UI };
 
   const actual = useMemo(
-    () => JSON.stringify({ datos, galeria, numeros }),
-    [datos, galeria, numeros]
+    () => JSON.stringify({ datos, galeria, sellos, numeros }),
+    [datos, galeria, sellos, numeros]
   );
   const hayCambios = actual !== guardado;
 
@@ -100,6 +107,7 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
           // El campo antiguo sigue siendo el respaldo cuando no hay reparto.
           whatsapp: numeros[0]?.numero || datos.whatsapp,
           numerosWhatsapp: JSON.stringify(numeros),
+          portadaSellos: JSON.stringify(sellos),
           galeria: JSON.stringify(galeria),
         }),
       });
@@ -170,6 +178,47 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
               ayuda="El único párrafo de texto libre de la sección «Quiénes somos»."
               valor={datos.descripcion}
               onChange={(v) => actualizar("descripcion", v)}
+              filas={3}
+            />
+          </div>
+        </TarjetaSeccion>
+
+        <TarjetaSeccion
+          titulo="Sellos de la portada"
+          ayuda="Las tres frases cortas que van bajo los botones, con su ícono fijo. Deja una vacía y vuelve a la de fábrica."
+          icono="ojo"
+        >
+          <div className="space-y-4">
+            {sellos.map((texto, i) => (
+              <Campo
+                key={i}
+                etiqueta={`Sello ${i + 1}`}
+                ayuda={`De fábrica: «${SELLOS_DEFECTO[i]}»`}
+                valor={texto}
+                onChange={(v) =>
+                  setSellos((prev) => prev.map((t, j) => (j === i ? v : t)))
+                }
+              />
+            ))}
+          </div>
+        </TarjetaSeccion>
+
+        <TarjetaSeccion
+          titulo="Sección de productos"
+          ayuda="El título y el párrafo que encabezan el catálogo, donde se explica que todo es al por mayor."
+          icono="caja"
+        >
+          <div className="space-y-4">
+            <Campo
+              etiqueta="Título"
+              valor={datos.catalogoTitulo}
+              onChange={(v) => actualizar("catalogoTitulo", v)}
+            />
+            <CampoArea
+              etiqueta="Párrafo"
+              ayuda="Los precios y los kilos del descuento se editan en cada producto, no acá."
+              valor={datos.catalogoBajada}
+              onChange={(v) => actualizar("catalogoBajada", v)}
               filas={3}
             />
           </div>

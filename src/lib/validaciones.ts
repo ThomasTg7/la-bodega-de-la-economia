@@ -20,13 +20,13 @@ export const esquemaProducto = z.object({
     .regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
   descripcion: z.string().trim().max(300).default(""),
   unidad: z.enum(["kg", "unidad", "malla"]).default("kg"),
-  precioDetalle: z.number().int().min(0).nullable().optional(),
-  precioMayorista: z.number().int().min(0).nullable().optional(),
+  precioBase: z.number().int().min(0).nullable().optional(),
+  precioDescuento: z.number().int().min(0).nullable().optional(),
   precioCaja: z.number().int().min(0).nullable().optional(),
   precioBin: z.number().int().min(0).nullable().optional(),
   kilosPorCaja: z.number().int().min(0).nullable().optional(),
   kilosPorBin: z.number().int().min(0).nullable().optional(),
-  umbralMayorista: z.number().int().min(1).default(10),
+  kilosDescuento: z.number().int().min(1).default(10),
   imagenTextura: z.string().trim().default(""),
   imagenRecorte: z.string().trim().default(""),
   colorAcento: z
@@ -77,6 +77,17 @@ export const esquemaAjustes = z.object({
     ),
   horario: z.string().trim().max(120).optional(),
   descripcion: z.string().trim().max(600).optional(),
+  // Los tres sellos viajan como texto JSON. Vacíos se permiten: al leerlos,
+  // parsearSellos() rellena cada hueco con el texto de fábrica.
+  portadaSellos: z
+    .string()
+    .optional()
+    .refine(
+      (s) => s === undefined || esListaSellosValida(s),
+      "Los sellos de la portada tienen que ser hasta 3 frases de 60 caracteres."
+    ),
+  catalogoTitulo: z.string().trim().max(80).optional(),
+  catalogoBajada: z.string().trim().max(300).optional(),
   // Vacío = se arma solo con la dirección. Si viene algo, tiene que ser una
   // URL completa: sin el https:// el navegador la tomaría como ruta interna
   // del sitio y el botón "Cómo llegar" no llevaría a ninguna parte.
@@ -100,6 +111,14 @@ const esquemaNumeroWhatsapp = z.object({
     .refine((n) => n.replace(/\D/g, "").length >= 8, "Número demasiado corto"),
   peso: z.number().min(0).max(100),
 });
+
+function esListaSellosValida(json: string) {
+  try {
+    return z.array(z.string().max(60)).max(3).safeParse(JSON.parse(json)).success;
+  } catch {
+    return false;
+  }
+}
 
 /** El campo viaja como texto JSON, así que el contenido se valida aparte. */
 function esListaNumerosValida(json: string) {

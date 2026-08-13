@@ -57,6 +57,72 @@ sesión de admin.
    `ADMIN_PASS_INICIAL`** de las variables de Vercel. Si usaste `migrar`, entras
    con tu clave de siempre y esas dos variables no hacen nada.
 
+## Elegir el motor de base de datos
+
+El proyecto corre sobre **PostgreSQL** (lo que usa hoy en Vercel, con Neon) o
+sobre **MariaDB / MySQL** (lo cómodo en un hosting compartido). Se elige con una
+variable de entorno:
+
+```bash
+DB_PROVIDER=postgresql   # por defecto, si no la pones
+DB_PROVIDER=mariadb      # o "mysql", es lo mismo
+```
+
+Con MariaDB el `DATABASE_URL` va con prefijo `mysql://` aunque el motor sea
+MariaDB — hablan el mismo protocolo y Prisma usa el mismo conector:
+
+```bash
+DATABASE_URL="mysql://usuario:clave@127.0.0.1:3306/bodega"
+```
+
+**`DB_PROVIDER` tiene que estar puesta antes del `npm install`.** El cliente de
+Prisma queda atado al motor con el que se generó, y quien lo genera es el
+`postinstall`. Si el hosting ya instaló con el valor equivocado, basta con
+volver a correr `npm install` (o `node scripts/generar-cliente.mjs`) con la
+variable corregida.
+
+### Levantar la base en MariaDB
+
+```bash
+npm run db:push:mariadb    # crea las tablas
+npm run db:seed:mariadb    # las llena con los datos de partida
+npm run db:studio:mariadb  # el visor de Prisma, si lo necesitas
+```
+
+Los comandos sin sufijo (`npm run db:push`, `db:seed`, `db:studio`) siguen
+apuntando a Postgres.
+
+### Por qué hay dos archivos de schema
+
+Prisma no acepta `provider = env("...")` en el bloque `datasource`: tiene que
+ser un literal. Soportar dos motores obliga entonces a dos archivos.
+
+Para que no se desincronicen, **solo se edita `prisma/schema.prisma`**. El de
+MariaDB se genera desde ese con `npm run schema:mariadb` (y se genera solo antes
+de cada comando `:mariadb`), cambiando una única línea: el provider. Está en el
+`.gitignore` justamente porque es un archivo derivado.
+
+Que la diferencia sea de una sola línea depende de los `@db.VarChar(n)` del
+schema base, que están puestos para servir a los dos motores a la vez:
+
+- En MySQL/MariaDB un `String` sin largo explícito es `varchar(191)`, donde no
+  entra el eslogan ni ninguno de los campos que guardan JSON.
+- Dejar esos campos como `TEXT` tampoco sirve: MySQL no permite `DEFAULT` en
+  columnas `TEXT`, y casi todas las nuestras tienen uno.
+- En Postgres, `varchar(n)` y `text` se comportan igual, así que anotar el largo
+  no cuesta nada de ese lado.
+
+Si agregas un campo de texto que pueda pasar de 191 caracteres, ponle su
+`@db.VarChar(n)`. Es la única regla que hay que recordar para que el schema siga
+sirviendo a los dos.
+
+### Lo que no viaja entre motores
+
+`prisma db push` crea el esquema, no copia los datos. Para pasar el contenido de
+una base a otra hay que exportarlo e importarlo aparte. Lo que sí es portable es
+el seed: `db:seed:mariadb` deja la base nueva con los productos y los ajustes de
+partida.
+
 ## Desarrollo local
 
 El schema es Postgres, así que `prisma/dev.db` ya no se usa. La forma más

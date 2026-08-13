@@ -8,7 +8,7 @@ import NumeroEscrito from "@/components/motion/NumeroEscrito";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { clp } from "@/lib/precios";
-import { EASE_SALIDA } from "@/lib/motion-config";
+import { PEDIDO_MINIMO_KG } from "@/lib/constantes";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
 
 type Props = {
@@ -38,8 +38,10 @@ export default function TarjetaProducto({ producto, indice }: Props) {
   const foto =
     producto.imagenTextura || TEXTURA_POR_SLUG[producto.slug] || "/texturas/paltas.webp";
   const blur = BLUR_POR_SLUG[producto.slug] ?? BLUR_TEXTURAS.paltas;
-  const precioGrande = producto.precioMayorista ?? producto.precioDetalle;
-  const hayDosPrecios = producto.precioMayorista != null && producto.precioDetalle != null;
+  // La tarjeta muestra un solo numero, el precio de lista. El descuento por
+  // volumen y los formatos (caja, bin) se conversan por WhatsApp, que es
+  // donde igual se cierra el pedido.
+  const precioGrande = producto.precioBase ?? producto.precioDescuento;
 
   return (
     <SeccionEntrada delay={indice * 0.1} className="h-full">
@@ -83,45 +85,28 @@ export default function TarjetaProducto({ producto, indice }: Props) {
           {precioGrande != null && (
             <div
               ref={precioRef}
-              className="mt-auto flex items-end justify-between gap-4 border-t border-dashed border-tinta/20 pt-5"
+              className="mt-auto border-t border-dashed border-tinta/20 pt-5"
             >
-              <div>
-                <p className="text-[0.65rem] font-bold tracking-[0.14em] text-verde-500 uppercase">
-                  Por mayor · {producto.umbralMayorista}+ {producto.unidad}
-                </p>
-                <p className="mt-1 flex items-baseline gap-1">
-                  <NumeroEscrito
-                    texto={clp(precioGrande)}
-                    activo={precioEnVista}
-                    velocidad={70}
-                    className="font-titulo text-verde-600"
-                    style={{
-                      fontSize: 36,
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  />
-                  <span className="text-sm font-semibold text-tinta-suave">
-                    /{producto.unidad}
-                  </span>
-                </p>
-              </div>
-
-              {hayDosPrecios && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={precioEnVista ? { opacity: 1 } : { opacity: 0 }}
-                  transition={{ duration: 0.5, ease: EASE_SALIDA, delay: 0.5 }}
-                  className="text-right"
-                >
-                  <p className="text-[0.65rem] font-bold tracking-[0.14em] text-tinta-suave uppercase">
-                    Detalle
-                  </p>
-                  <p className="font-semibold text-tinta" style={{ fontVariantNumeric: "tabular-nums" }}>
-                    {clp(producto.precioDetalle!)}
-                  </p>
-                </motion.div>
-              )}
+              <p className="text-[0.65rem] font-bold tracking-[0.14em] text-verde-500 uppercase">
+                Precio por {producto.unidad}
+              </p>
+              <p className="mt-1 flex items-baseline gap-1">
+                <NumeroEscrito
+                  texto={clp(precioGrande)}
+                  activo={precioEnVista}
+                  velocidad={70}
+                  className="font-titulo text-verde-600"
+                  style={{
+                    fontSize: 36,
+                    lineHeight: 1,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                />
+                <span className="text-sm font-semibold text-tinta-suave">
+                  /{producto.unidad}
+                </span>
+              </p>
+              <p className="mt-2 text-[13px] text-tinta-suave">Precio hasta agotar stock</p>
             </div>
           )}
 
@@ -130,7 +115,7 @@ export default function TarjetaProducto({ producto, indice }: Props) {
             onClick={() =>
               abrir({
                 asunto: "Cotización",
-                mensaje: `Quiero cotizar ${producto.nombre}. Necesito ___ ${producto.unidad}.`,
+                mensaje: `Quiero cotizar ${producto.nombre}. Necesito ___ ${producto.unidad} (el pedido mínimo es de ${PEDIDO_MINIMO_KG} kg).`,
               })
             }
             whileHover={{ scale: 1.02 }}

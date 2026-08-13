@@ -53,3 +53,6 @@ next-env.d.ts
 
 # originales pesados (no se sirven, quedan solo en local)
 /assets-originales/*.png
+
+# Schema de MariaDB: se genera desde prisma/schema.prisma.
+prisma/schema.mariadb.prisma

@@ -6,18 +6,21 @@ export type NumeroWhatsApp = {
   peso: number;
 };
 
-export function armarLinkWhatsApp(
-  numero: string,
-  nombre: string,
-  asunto: string,
-  mensaje: string
-) {
+/**
+ * Link de wa.me que abre la conversación directamente. El mensaje llega
+ * escrito pero editable: la persona todavía aprieta enviar dentro de
+ * WhatsApp, así que sirve de borrador y no de envío a ciegas. Sin mensaje
+ * (el botón "Escríbenos" a secas) abre el chat en blanco.
+ */
+export function armarLinkWhatsApp(numero: string, asunto?: string, mensaje?: string) {
   const tel = numero.replace(/\D/g, "");
+  const cuerpo = (mensaje ?? "").trim();
+  if (!cuerpo) return `https://wa.me/${tel}`;
+
   const texto =
-    `¡Hola! Soy ${nombre.trim()}.\n` +
-    `Asunto: ${asunto}\n\n` +
-    `${mensaje.trim()}\n\n` +
-    `— Enviado desde labodegadelaeconomia.cl`;
+    `¡Hola! Les escribo desde labodegadelaeconomia.cl.\n` +
+    (asunto ? `Asunto: ${asunto}\n` : "") +
+    `\n${cuerpo}`;
   return `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`;
 }
 

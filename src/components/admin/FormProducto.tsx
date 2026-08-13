@@ -11,7 +11,7 @@ import TarjetaSeccion, { ListaTarjetas } from "./TarjetaSeccion";
 import VistaPrevia from "./VistaPrevia";
 import { useToast } from "./Toast";
 import { Icono } from "./Iconos";
-import { COLORES_ACENTO } from "@/lib/constantes";
+import { COLORES_ACENTO, KILOS_BIN_REFERENCIA, PEDIDO_MINIMO_KG } from "@/lib/constantes";
 import { EASE_SALIDA, RESORTE_UI, useMovimientoReducido } from "@/lib/motion-config";
 
 type Datos = {
@@ -19,13 +19,13 @@ type Datos = {
   slug: string;
   descripcion: string;
   unidad: string;
-  precioDetalle: number | null;
-  precioMayorista: number | null;
+  precioBase: number | null;
+  precioDescuento: number | null;
   precioCaja: number | null;
   precioBin: number | null;
   kilosPorCaja: number | null;
   kilosPorBin: number | null;
-  umbralMayorista: number;
+  kilosDescuento: number;
   imagenTextura: string;
   imagenRecorte: string;
   colorAcento: string;
@@ -38,13 +38,13 @@ const VACIO: Datos = {
   slug: "",
   descripcion: "",
   unidad: "kg",
-  precioDetalle: null,
-  precioMayorista: null,
+  precioBase: null,
+  precioDescuento: null,
   precioCaja: null,
   precioBin: null,
   kilosPorCaja: null,
   kilosPorBin: null,
-  umbralMayorista: 10,
+  kilosDescuento: 10,
   imagenTextura: "",
   imagenRecorte: "",
   colorAcento: COLORES_ACENTO[0],
@@ -74,13 +74,13 @@ export default function FormProducto({ productoExistente }: { productoExistente?
         slug: productoExistente.slug,
         descripcion: productoExistente.descripcion,
         unidad: productoExistente.unidad,
-        precioDetalle: productoExistente.precioDetalle,
-        precioMayorista: productoExistente.precioMayorista,
+        precioBase: productoExistente.precioBase,
+        precioDescuento: productoExistente.precioDescuento,
         precioCaja: productoExistente.precioCaja,
         precioBin: productoExistente.precioBin,
         kilosPorCaja: productoExistente.kilosPorCaja,
         kilosPorBin: productoExistente.kilosPorBin,
-        umbralMayorista: productoExistente.umbralMayorista,
+        kilosDescuento: productoExistente.kilosDescuento,
         imagenTextura: productoExistente.imagenTextura,
         imagenRecorte: productoExistente.imagenRecorte,
         colorAcento: productoExistente.colorAcento,
@@ -265,19 +265,19 @@ export default function FormProducto({ productoExistente }: { productoExistente?
         <TarjetaSeccion titulo="Precios" icono="calculadora">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <CampoPrecio
-              id="p-detalle"
-              etiqueta="Precio al detalle"
-              ayuda="Lo que paga alguien que lleva poca cantidad."
-              valor={datos.precioDetalle}
-              onChange={(v) => actualizar("precioDetalle", v)}
+              id="p-base"
+              etiqueta="Precio por mayor"
+              ayuda="El precio de la lista. Es el que ve cualquiera, lleve lo que lleve."
+              valor={datos.precioBase}
+              onChange={(v) => actualizar("precioBase", v)}
               sufijo={`/${datos.unidad}`}
             />
             <CampoPrecio
-              id="p-mayorista"
-              etiqueta="Precio al por mayor"
-              ayuda="Precio rebajado cuando llevan harto."
-              valor={datos.precioMayorista}
-              onChange={(v) => actualizar("precioMayorista", v)}
+              id="p-descuento"
+              etiqueta="Precio con descuento"
+              ayuda="El precio rebajado que se activa al pasar los kilos de más abajo."
+              valor={datos.precioDescuento}
+              onChange={(v) => actualizar("precioDescuento", v)}
               sufijo={`/${datos.unidad}`}
             />
 
@@ -311,7 +311,7 @@ export default function FormProducto({ productoExistente }: { productoExistente?
                 onChange={(v) => actualizar("precioBin", v)}
               />
               <label htmlFor="p-kg-bin" className="mt-2 block text-xs text-tinta-suave">
-                ¿Cuántos kilos trae el bin?
+                ¿Cuántos kilos trae el bin? Son aprox. {KILOS_BIN_REFERENCIA} kg de fruta.
               </label>
               <input
                 id="p-kg-bin"
@@ -327,23 +327,25 @@ export default function FormProducto({ productoExistente }: { productoExistente?
           </div>
 
           <div className="mt-5 border-t border-tinta/10 pt-5">
-            <label htmlFor="p-umbral" className="block text-sm font-semibold text-tinta">
-              El precio por mayor se aplica desde
+            <label htmlFor="p-kilos-descuento" className="block text-sm font-semibold text-tinta">
+              El descuento se aplica desde
             </label>
             <div className="mt-1.5 flex items-center gap-2">
               <input
-                id="p-umbral"
+                id="p-kilos-descuento"
                 type="number"
                 min={1}
-                value={datos.umbralMayorista}
-                onChange={(e) => actualizar("umbralMayorista", Number(e.target.value) || 1)}
+                value={datos.kilosDescuento}
+                onChange={(e) => actualizar("kilosDescuento", Number(e.target.value) || 1)}
                 className="w-24 rounded-xl border border-tinta/15 px-3 py-2 outline-none transition-colors focus:border-cyan-400"
               />
               <span className="text-tinta-suave">{datos.unidad}</span>
             </div>
             <p className="mt-1.5 text-xs text-tinta-suave">
-              En la calculadora de la página, al pasar esta cantidad se activa solo el precio
-              rebajado.
+              Es la línea donde cambia el precio: sobre esta cantidad, la página y la
+              calculadora pasan solas al precio con descuento. El pedido más chico que se
+              acepta es de {PEDIDO_MINIMO_KG} kg, así que poner menos que eso no cambia
+              nada — el descuento saldría siempre.
             </p>
           </div>
 

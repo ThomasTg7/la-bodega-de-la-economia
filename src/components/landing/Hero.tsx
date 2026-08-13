@@ -2,43 +2,31 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import type { Producto } from "@prisma/client";
 import { motion, useScroll, useTransform } from "motion/react";
 import TextoRevelado from "@/components/motion/TextoRevelado";
-import NumeroEscrito from "@/components/motion/NumeroEscrito";
+import IconoTikTok from "./IconoTikTok";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
-import { clp } from "@/lib/precios";
-import { DIMENSIONES_RECORTE, DIMENSION_RECORTE_DEFECTO } from "@/lib/constantes";
-import { EASE_SALIDA, EASE_REBOTE, RESORTE_UI, useEsMovil } from "@/lib/motion-config";
+import { REGION, TIKTOK_URL } from "@/lib/constantes";
+import { embedMapa } from "@/lib/mapa";
+import { ICONOS_SELLOS } from "@/lib/portada";
+import { EASE_SALIDA, RESORTE_UI, useEsMovil } from "@/lib/motion-config";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
 
 type Props = {
-  productoDestacado: Producto | null;
   /** Campo "Eslogan de la portada" del panel. */
   eslogan: string;
-  /** Ya resuelto con linkMapa(): el link del panel o la búsqueda por dirección. */
+  /** Dirección exacta del local, tal como está en el panel. Va en la
+   * tarjeta del mapa; la línea de arriba muestra ciudad y región. */
+  direccion: string;
+  ciudad: string;
+  /** Los tres sellos, ya resueltos con parsearSellos(). */
+  sellos: string[];
+  /** Ya resuelto con linkMapa(): el link del panel o la ficha de Google. */
   mapaUrl: string;
 };
 
-const SELLOS = [
-  { icono: "camion", texto: "Te lo llevamos a tu local" },
-  { icono: "check", texto: "Al por mayor y al detalle" },
-  { icono: "hoja", texto: "Directo del productor" },
-];
 
-// Guion de entrada de la pizarra, en segundos. Está acá arriba porque el
-// orden importa: primero cuelga el tablero, después cae la palta, al final
-// se escribe el precio. Mover un número descoloca toda la escena.
-const T = {
-  tablero: 0.45,
-  vaiven: 1.2,
-  etiqueta: 1.5,
-  palta: 1.6,
-  nombre: 1.95,
-  precio: 2.15,
-};
-
-export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
+export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Props) {
   const heroRef = useRef<HTMLElement>(null);
   const { abrir } = useBurbujaWhatsApp();
   const esMovil = useEsMovil();
@@ -53,16 +41,10 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
   const escalaFondo = useTransform(progresoHero, [0, 1], [1.16, 1.3]);
   const yTexto = useTransform(progresoHero, [0, 0.8], [0, -120]);
   const opacidadTexto = useTransform(progresoHero, [0, 0.75], [1, 0]);
-  const yPizarra = useTransform(progresoHero, [0, 1], [0, -220]);
-  const rotarPizarra = useTransform(progresoHero, [0, 1], [0, 6]);
+  const yMapa = useTransform(progresoHero, [0, 1], [0, -180]);
 
   const { scrollY } = useScroll();
   const opacidadIndicador = useTransform(scrollY, [0, 120], [1, 0]);
-
-  const precioMayor = productoDestacado?.precioMayorista ?? null;
-  const recorte = productoDestacado?.imagenRecorte || "/recortes/palta.png";
-  const dim =
-    DIMENSIONES_RECORTE[productoDestacado?.slug ?? ""] ?? DIMENSION_RECORTE_DEFECTO;
 
   return (
     <section
@@ -97,37 +79,51 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
         }}
       />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-x-12 gap-y-8 px-6 pt-24 pb-20 md:grid-cols-[1.1fr_0.9fr] md:gap-y-6 md:px-10 md:pt-28 md:pb-24">
+      {/* El nav flotante recién aparece pasado el 70% de la portada, así que
+          arriba no hay nada que esquivar: el respiro alcanza con la mitad de
+          lo que había y el bloque de texto arranca mucho más arriba. */}
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-x-12 gap-y-8 px-6 pt-12 pb-16 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-stretch md:gap-y-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:px-10 md:pt-14 md:pb-20">
         {/* Bloque de texto */}
         <motion.div style={{ y: yTexto, opacity: opacidadTexto }}>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE_SALIDA }}
-            className="flex items-center gap-3 text-[0.7rem] font-bold tracking-[0.18em] text-limon uppercase sm:text-xs"
+            className="flex items-center gap-3 text-[0.7rem] font-bold tracking-[0.16em] text-limon uppercase sm:text-xs lg:text-sm"
           >
             <motion.span
               aria-hidden="true"
-              className="h-[3px] rounded-full bg-naranja"
+              className="h-[3px] shrink-0 rounded-full bg-naranja"
               initial={{ width: 0 }}
               animate={{ width: 28 }}
               transition={{ duration: 0.6, ease: EASE_SALIDA, delay: 0.2 }}
             />
-            Rancagua · Región de O&apos;Higgins
+            {direccion} · {ciudad}, {REGION}
           </motion.p>
 
           {/* Cortes de línea fijos: TextoRevelado parte el texto en cajas
               inline-block, así que un salto automático rompería palabras. */}
+          {/* Dos escalas distintas, y tienen que serlo: en móvil el título
+              ocupa el ancho completo de la pantalla, en escritorio vive
+              dentro de una columna que es apenas el 60% del contenido, así
+              que un mismo vw no puede servir a los dos.
+
+              Móvil — el piso se probó hasta romper: "LA BODEGA" empieza a
+              partirse en dos líneas por sobre ~57px en un iPhone de 414px, y
+              por sobre ~49px en uno de 360px. El punto de quiebre está
+              siempre cerca del 13.9% del ancho de pantalla; 13.6vw es lo más
+              grande que cabe con margen en los tres anchos probados
+              (360/375/414) sin partirse.
+
+              Escritorio — medido en el navegador: "LA BODEGA" mide 6.36px de
+              ancho por cada px de tamaño de fuente. En lg la columna
+              izquierda queda en 691px a 1440, así que el techo de 6.5rem
+              (104px → 641px) entra con holgura. El tramo md (768–1023) va
+              aparte y más chico: ahí la columna cae a ~337px y con el vw de
+              lg el título se partía. */}
           <h1
-            className="mt-5 font-titulo text-white"
+            className="mt-5 font-titulo text-[clamp(2.6rem,13.6vw,5.5rem)] text-white md:text-[clamp(2.6rem,5.4vw,4rem)] lg:text-[clamp(3rem,7vw,6.5rem)]"
             style={{
-              // El piso fijo se probó hasta romper: "LA BODEGA" empieza a
-              // partirse en dos líneas por sobre ~57px en un iPhone de
-              // 414px, y por sobre ~49px en uno de 360px. El punto de
-              // quiebre está siempre cerca del 13.9% del ancho de pantalla;
-              // 13.6vw es lo más grande que cabe con margen en los tres
-              // anchos probados (360/375/414) sin partirse.
-              fontSize: "clamp(2.6rem, 13.6vw, 5.5rem)",
               lineHeight: 1.02,
               letterSpacing: "-0.015em",
               textShadow: "0 4px 30px rgba(0,0,0,.35)",
@@ -162,163 +158,107 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE_SALIDA, delay: 0.5 }}
-              className="mt-6 text-white/85"
-              style={{ fontSize: "var(--text-cuerpo)", lineHeight: 1.6, maxWidth: "46ch" }}
+              className="mt-6 text-[length:var(--text-cuerpo)] text-white/85 md:text-[1.05rem] lg:text-[1.3rem]"
+              style={{ lineHeight: 1.6, maxWidth: "42ch" }}
             >
               {eslogan}
             </motion.p>
           )}
         </motion.div>
 
-        {/* Pizarra colgada: una palta y el precio por kilo. Nada más. */}
+        {/* Mapa del local: el pin de Google sobre la ficha real, dentro de
+            un marco que hace juego con la portada. Encima del iframe va una
+            capa transparente que se lleva el click: así tocar el mapa en un
+            teléfono abre la app de mapas en vez de quedar peleando con el
+            zoom de Google dentro de la página. */}
+        {/* En escritorio la tarjeta cruza las tres filas de la izquierda
+            (texto, botones, sellos). Antes ocupaba solo la primera y las
+            otras dos quedaban como un hueco vacío al lado del mapa. */}
         <motion.aside
-          style={{ y: yPizarra, rotate: rotarPizarra }}
-          className="relative mx-auto w-full max-w-[280px] md:mx-0 md:ml-auto md:max-w-[380px]"
+          style={{ y: yMapa }}
+          className="relative mx-auto w-full max-w-[420px] md:mx-0 md:max-w-none lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:ml-auto lg:flex lg:max-w-[425px] lg:items-center"
         >
-          {/* Capa 1 — el tablero baja y queda colgando de los dos tornillos */}
+          {/* La entrada va en su propia capa: el `y` de la tarjeta es el del
+              parallax de scroll, y dos animaciones sobre el mismo eje en el
+              mismo elemento se pisan. */}
           <motion.div
-            initial={{ opacity: 0, y: -70, rotateX: -62 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ duration: 0.95, ease: EASE_SALIDA, delay: T.tablero }}
-            style={{ transformPerspective: 1000, transformOrigin: "top center" }}
+            initial={{ opacity: 0, y: 40, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, ease: EASE_SALIDA, delay: 0.45 }}
+            className="w-full overflow-hidden rounded-[24px] bg-white/10 p-2 backdrop-blur-sm"
+            style={{
+              boxShadow: "0 30px 64px rgba(0,0,0,.45)",
+              border: "1px solid rgba(255,255,255,.22)",
+            }}
           >
-            {/* Capa 2 — vaivén de péndulo hasta quedar apenas torcida */}
-            <motion.div
-              initial={{ rotate: 0 }}
-              animate={{ rotate: esMovil ? [0, -3, 1.6, -0.8, 0] : [0, -7, 4, -2.4, 1.2, -1.6] }}
-              transition={{ duration: 1.9, ease: "easeOut", delay: T.vaiven }}
-              style={{ transformOrigin: "top center" }}
+            <div className="relative overflow-hidden rounded-[17px] bg-verde-700">
+              <iframe
+                src={embedMapa()}
+                title="Mapa de La bodega de la economía"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="block h-[240px] w-full border-0 sm:h-[290px] md:h-[320px] lg:h-[400px]"
+              />
+
+              <a
+                href={mapaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Abrir la ubicación en Google Maps"
+                className="absolute inset-0"
+              />
+            </div>
+
+            {/* El nombre del local ya está gritado en el h1 de al lado: acá
+                solo va la dirección y el botón que abre Maps de verdad. */}
+            <motion.a
+              href={mapaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.985 }}
+              transition={{ type: "spring", ...RESORTE_UI }}
+              className="mt-2 flex items-center gap-3 rounded-[17px] bg-white/12 px-3 py-3 text-left"
             >
-              {/* Marco de madera */}
-              <div
-                className="relative rounded-[12px] p-[11px]"
-                style={{
-                  background:
-                    "repeating-linear-gradient(96deg, #7a5230 0 5px, #6b4a2b 5px 11px, #835a35 11px 16px)",
-                  boxShadow:
-                    "0 30px 64px rgba(0,0,0,.55), 0 4px 0 rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.14)",
-                }}
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-naranja text-white"
               >
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-[13px] left-6 h-3 w-3 rounded-full bg-[#cfd3d6] shadow-[0_2px_4px_rgba(0,0,0,.6)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-[13px] right-6 h-3 w-3 rounded-full bg-[#cfd3d6] shadow-[0_2px_4px_rgba(0,0,0,.6)]"
-                />
-
-                {/* Tablero de tiza */}
-                <div
-                  className="relative overflow-hidden rounded-[5px] px-5 pt-6 pb-5 text-center sm:px-7 sm:pt-7 sm:pb-6"
-                  style={{
-                    background: "linear-gradient(158deg, #1a3a2f 0%, #0c1e18 55%, #142d25 100%)",
-                    boxShadow: "inset 0 0 70px rgba(0,0,0,.7), inset 0 2px 0 rgba(255,255,255,.05)",
-                  }}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {/* Polvo de tiza: manchones y rayado del paño */}
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      background:
-                        "radial-gradient(ellipse 60% 40% at 22% 18%, rgba(255,255,255,.07), transparent 70%), radial-gradient(ellipse 50% 35% at 78% 72%, rgba(255,255,255,.05), transparent 70%), repeating-linear-gradient(102deg, rgba(255,255,255,.035) 0 1px, transparent 1px 7px)",
-                    }}
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-[7px] rounded-[3px] border border-dashed border-white/20"
-                  />
-
-                  <motion.p
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: EASE_SALIDA, delay: T.etiqueta }}
-                    className="relative text-[0.68rem] font-bold tracking-[0.18em] text-limon uppercase"
-                  >
-                    Precio por mayor
-                  </motion.p>
-
-                  {/* La palta vive dentro del tablero: cae desde arriba y
-                      después se queda flotando en su sitio. */}
-                  <motion.div
-                    initial={{ opacity: 0, y: -70, scale: 0.65, rotate: -24 }}
-                    animate={{ opacity: 1, y: 0, scale: 1, rotate: -6 }}
-                    transition={{ duration: 0.9, ease: EASE_REBOTE, delay: T.palta }}
-                    className="relative mt-4 flex justify-center"
-                  >
-                    <motion.div
-                      animate={{ y: [0, -9, 0], rotate: [0, 1.6, 0] }}
-                      transition={{
-                        duration: 6,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: T.palta + 1,
-                      }}
-                    >
-                      <Image
-                        src={recorte}
-                        alt={productoDestacado?.nombre ?? "Palta"}
-                        width={dim.w}
-                        height={dim.h}
-                        priority
-                        className="w-auto select-none"
-                        style={{
-                          height: "clamp(148px, 20vw, 210px)",
-                          filter: "drop-shadow(0 18px 24px rgba(0,0,0,.6))",
-                        }}
-                      />
-                    </motion.div>
-                  </motion.div>
-
-                  <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: EASE_SALIDA, delay: T.nombre }}
-                    className="relative mt-4 font-titulo text-white"
-                    style={{ fontSize: "1.4rem", lineHeight: 1.2 }}
-                  >
-                    {productoDestacado?.nombre ?? "Palta Hass"}
-                  </motion.p>
-
-                  {precioMayor != null ? (
-                    <p className="relative mt-2 flex items-baseline justify-center gap-2">
-                      <NumeroEscrito
-                        texto={clp(precioMayor)}
-                        delay={T.precio}
-                        velocidad={95}
-                        className="font-titulo text-limon"
-                        style={{
-                          fontSize: "clamp(2.6rem, 7vw, 3.8rem)",
-                          lineHeight: 0.95,
-                          fontVariantNumeric: "tabular-nums",
-                          textShadow: "0 0 18px rgba(245,205,7,.35)",
-                        }}
-                      />
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.4, delay: T.precio + clp(precioMayor).length * 0.095 }}
-                        className="text-base font-semibold text-white/70"
-                      >
-                        el kilo
-                      </motion.span>
-                    </p>
-                  ) : (
-                    <p className="relative mt-3 text-white/70">Consulta el precio del día</p>
-                  )}
-
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: T.precio + 1 }}
-                    className="relative mt-5 border-t border-dashed border-white/15 pt-4 text-xs text-white/55"
-                  >
-                    El precio está sujeto a variaciones.
-                  </motion.p>
-                </div>
-              </div>
-            </motion.div>
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-white">Abrir Google Maps</span>
+                <span className="block truncate text-xs text-white/70">
+                  {direccion}
+                </span>
+              </span>
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="shrink-0 text-white/60"
+              >
+                <path d="M7 17 17 7M9 7h8v8" />
+              </svg>
+            </motion.a>
           </motion.div>
         </motion.aside>
 
@@ -332,7 +272,7 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
             como="button"
             onClick={() => abrir()}
             delay={0.72}
-            className="justify-center gap-2 bg-[#25D366] px-5 py-3.5 text-sm text-white shadow-[0_12px_32px_rgba(37,211,102,.32)] sm:px-8 sm:py-4 sm:text-base"
+            className="justify-center gap-2 bg-[#25D366] px-5 py-3.5 text-sm text-white shadow-[0_12px_32px_rgba(37,211,102,.32)] sm:px-8 sm:py-4 sm:text-base lg:px-9 lg:py-[1.15rem] lg:text-lg"
           >
             <svg
               viewBox="0 0 24 24"
@@ -350,28 +290,16 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
 
           <BotonSuave
             como="a"
-            href={mapaUrl}
+            href={TIKTOK_URL}
             externo
-            delay={0.8}
-            className="justify-center gap-2 border-2 border-white/50 px-5 py-3.5 text-sm text-white sm:px-8 sm:py-4 sm:text-base"
+            delay={0.78}
+            className="justify-center gap-2 bg-[#010101] px-5 py-3.5 text-sm text-white shadow-[0_12px_32px_rgba(254,44,85,.28)] sm:px-8 sm:py-4 sm:text-base lg:px-9 lg:py-[1.15rem] lg:text-lg"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="shrink-0"
-            >
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            Cómo llegar
+            <IconoTikTok />
+            <span className="sm:hidden">TikTok</span>
+            <span className="hidden sm:inline">Míranos en TikTok</span>
           </BotonSuave>
+
         </motion.div>
 
         <motion.div
@@ -381,17 +309,17 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
           variants={{ visible: { transition: { delayChildren: 1, staggerChildren: 0.12 } } }}
           className="flex flex-wrap justify-center gap-x-7 gap-y-3 border-t border-white/20 pt-6 md:col-start-1 md:row-start-3 md:justify-start"
         >
-          {SELLOS.map((sello) => (
+          {sellos.map((texto, i) => (
             <motion.span
-              key={sello.texto}
+              key={texto}
               variants={{
                 oculto: { opacity: 0, y: 12 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_SALIDA } },
               }}
-              className="flex items-center gap-2 text-sm font-medium text-white/85"
+              className="flex items-center gap-2 text-sm font-medium text-white/85 lg:text-base"
             >
-              <IconoSello nombre={sello.icono} />
-              {sello.texto}
+              <IconoSello nombre={ICONOS_SELLOS[i] ?? "check"} />
+              {texto}
             </motion.span>
           ))}
         </motion.div>
@@ -417,8 +345,11 @@ export default function Hero({ productoDestacado, eslogan, mapaUrl }: Props) {
 }
 
 /**
- * Botón de la portada. El hover y el tap van con resorte en vez de un salto
- * de escala: la diferencia entre que se sienta suave o brusco está acá.
+ * Botón de la portada. Entra con resorte —sube, se pasa un poco de tamaño y
+ * se acomoda— y justo después le cruza un destello de lado a lado, que es lo
+ * que hace que el ojo caiga ahí. El hover y el tap también van con resorte:
+ * la diferencia entre que se sienta suave o brusco está en no usar duración
+ * fija para nada de esto.
  */
 function BotonSuave({
   como,
@@ -439,14 +370,39 @@ function BotonSuave({
   children: React.ReactNode;
 }) {
   const comun = {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6, ease: EASE_SALIDA, delay },
-    className: `flex items-center rounded-full font-semibold ${className}`,
+    initial: { opacity: 0, y: 22, scale: 0.86 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    transition: {
+      delay,
+      type: "spring" as const,
+      stiffness: 420,
+      damping: 17,
+      mass: 0.7,
+      opacity: { duration: 0.35, ease: EASE_SALIDA, delay },
+    },
+    className: `relative isolate flex items-center overflow-hidden rounded-full font-semibold ${className}`,
   };
   const resorte = { type: "spring" as const, ...RESORTE_UI };
   const encima = { y: -4, transition: resorte };
   const tocado = { y: -1, scale: 0.985, transition: resorte };
+
+  // El destello es un gradiente angosto que barre el botón una sola vez,
+  // apenas termina de asentarse el resorte. `x` en porcentaje para que la
+  // pasada dure lo mismo en el botón corto de móvil y en el largo de
+  // escritorio.
+  const destello = (
+    <motion.span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-y-0 -z-10 w-1/2"
+      style={{
+        background:
+          "linear-gradient(100deg, transparent 0%, rgba(255,255,255,.45) 50%, transparent 100%)",
+      }}
+      initial={{ x: "-160%" }}
+      animate={{ x: "320%" }}
+      transition={{ duration: 0.9, ease: EASE_SALIDA, delay: delay + 0.35 }}
+    />
+  );
 
   if (como === "a") {
     return (
@@ -457,12 +413,14 @@ function BotonSuave({
         whileHover={encima}
         whileTap={tocado}
       >
+        {destello}
         {children}
       </motion.a>
     );
   }
   return (
     <motion.button type="button" onClick={onClick} {...comun} whileHover={encima} whileTap={tocado}>
+      {destello}
       {children}
     </motion.button>
   );

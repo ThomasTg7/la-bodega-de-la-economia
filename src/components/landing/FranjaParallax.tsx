@@ -49,7 +49,19 @@ export default function FranjaParallax({
   const yFondo = useTransform(suave, [0, 1], [`${factor * -260}px`, `${factor * 260}px`]);
   // La foto entra grande y se va asentando: refuerza la sensación de que
   // está más lejos que el texto, que va en sentido contrario.
-  const escalaFondo = useTransform(suave, [0, 0.5, 1], reducido ? [1, 1, 1] : [1.28, 1.14, 1.28]);
+  //
+  // En móvil arranca mucho más cerca del 1. La variante vertical ya viene
+  // recortada para ese ancho, así que el 1.28 de escritorio la ampliaba
+  // encima del recorte y la dejaba encimosa; el desplazamiento del parallax
+  // en móvil también es menor (factor * 0.6), o sea que no necesita tanto
+  // sobrante para no descubrir el borde.
+  const escalaMax = esMovil ? 1.1 : 1.28;
+  const escalaMin = esMovil ? 1.02 : 1.14;
+  const escalaFondo = useTransform(
+    suave,
+    [0, 0.5, 1],
+    reducido ? [1, 1, 1] : [escalaMax, escalaMin, escalaMax]
+  );
   const yTexto = useTransform(suave, [0, 1], reducido ? ["0px", "0px"] : ["90px", "-90px"]);
   const opacidadTexto = useTransform(
     suave,
@@ -63,8 +75,13 @@ export default function FranjaParallax({
       id={id}
       className={`relative grid place-items-center overflow-hidden bg-verde-700 text-center ${className}`}
     >
+      {/* El sobrante vertical es lo que más acerca la foto: la caja mide un
+          190% del alto de la franja y `object-cover` la escala hasta llenarla,
+          recortando por los lados. En móvil basta un 144% para tapar el
+          recorrido del parallax (±70px con el factor reducido), y la foto se
+          ve bastante más lejos. */}
       <motion.div
-        className="absolute inset-[-45%_0] z-0"
+        className="absolute inset-[-22%_0] z-0 md:inset-[-45%_0]"
         style={{ y: yFondo, scale: escalaFondo }}
       >
         <Image

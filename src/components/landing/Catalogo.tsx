@@ -2,10 +2,16 @@ import type { Producto } from "@prisma/client";
 import TextoRevelado from "@/components/motion/TextoRevelado";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import TarjetaProducto from "./TarjetaProducto";
+import { PEDIDO_MINIMO_KG } from "@/lib/constantes";
 
-type Props = { productos: Producto[] };
+type Props = {
+  productos: Producto[];
+  /** Titulo y bajada de la seccion, editables desde el panel. */
+  titulo: string;
+  bajada: string;
+};
 
-export default function Catalogo({ productos }: Props) {
+export default function Catalogo({ productos, titulo, bajada }: Props) {
   return (
     <section
       id="catalogo"
@@ -22,13 +28,32 @@ export default function Catalogo({ productos }: Props) {
               className="mt-4 font-titulo text-verde-700"
               style={{ fontSize: "clamp(2rem, 4.6vw, 3.4rem)", lineHeight: 1.02 }}
             >
-              <TextoRevelado texto="Precio por kilo, al por mayor" modo="palabra" as="span" />
+              <TextoRevelado texto={titulo} modo="palabra" as="span" />
             </h2>
           </div>
-          <p className="max-w-[46ch] text-tinta-suave" style={{ fontSize: "var(--text-cuerpo)" }}>
-            Los valores se mueven según la semana y el volumen. Escríbenos y te cerramos el
-            precio del día para tu pedido.
-          </p>
+          <div className="max-w-[46ch]">
+            <p className="text-tinta-suave" style={{ fontSize: "var(--text-cuerpo)" }}>
+              {bajada}
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-verde-700 px-4 py-2 text-sm font-semibold text-white">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="shrink-0 text-limon"
+              >
+                <path d="M20 10c0-4-3-7-8-7s-8 3-8 7" />
+                <path d="M3 10h18l-1.5 10.5a1.5 1.5 0 0 1-1.5 1.3H6a1.5 1.5 0 0 1-1.5-1.3Z" />
+              </svg>
+              Pedido mínimo de {PEDIDO_MINIMO_KG} kg
+            </p>
+          </div>
         </SeccionEntrada>
 
         <div

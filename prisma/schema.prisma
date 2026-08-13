@@ -11,22 +11,28 @@ model Producto {
   id          String @id @default(cuid())
   nombre      String
   slug        String @unique
-  descripcion String @default("")
+  descripcion String @default("") @db.VarChar(400)
   emoji       String @default("")
   unidad      String @default("kg") // kg | unidad | malla
 
   // Precios en CLP enteros. null = "no se vende en ese formato" -> no se muestra.
-  precioDetalle   Int?
-  precioMayorista Int?
+  //
+  // Todo lo que sale de la bodega es precio por mayor: `precioBase` es el
+  // precio por kilo de siempre y `precioDescuento` el que se aplica al pasar
+  // `kilosDescuento`. Los @map conservan los nombres viejos de las columnas
+  // (precioDetalle / precioMayorista / umbralMayorista), así que renombrar
+  // acá no toca la base ni pide migración.
+  precioBase      Int? @map("precioDetalle")
+  precioDescuento Int? @map("precioMayorista")
   precioCaja      Int?
   precioBin       Int?
 
-  kilosPorCaja    Int?
-  kilosPorBin     Int?
-  umbralMayorista Int @default(10)
+  kilosPorCaja   Int?
+  kilosPorBin    Int?
+  kilosDescuento Int  @default(10) @map("umbralMayorista")
 
-  imagenTextura String @default("")
-  imagenRecorte String @default("")
+  imagenTextura String @default("") @db.VarChar(500)
+  imagenRecorte String @default("") @db.VarChar(500)
   colorAcento   String @default("#30CFB2")
 
   activo    Boolean @default(true)
@@ -64,7 +70,7 @@ model Mensaje {
   email    String   @default("")
   telefono String   @default("")
   asunto   String   @default("Consulta")
-  mensaje  String
+  mensaje  String   @db.VarChar(1200)
   origen   String   @default("formulario") // formulario | whatsapp
   /// Número de WhatsApp que recibió el mensaje, cuando el reparto tiene
   /// varios. Vacío para los mensajes del formulario.
@@ -81,18 +87,25 @@ model Mensaje {
 model Ajustes {
   id            String   @id @default("sitio")
   nombreNegocio String   @default("La bodega de la economía")
-  eslogan       String   @default("Un emprendimiento local para locales, donde ahorrar es la única opción. Visítanos y encarga cuando quieras.")
-  direccion     String   @default("Cooperativa La Cruz, Malleco #4")
+  eslogan       String   @default("Un emprendimiento local para locales, donde el precio está al alcance de su bolsillo. Visítenos y consulte por nuestros productos cuando quiera.") @db.VarChar(400)
+  direccion     String   @default("Malleco #04, Cooperativa La Cruz") @db.VarChar(255)
   ciudad        String   @default("Rancagua")
   telefono1     String   @default("+56995415039")
   telefono2     String   @default("+56941877683")
   whatsapp      String   @default("+56995415039")
   /// Reparto de la burbuja: JSON [{ nombre, numero, peso }]. Si está vacío se
   /// usa `whatsapp` como único destino. Los pesos son relativos entre sí.
-  numerosWhatsapp String @default("[]")
-  horario       String   @default("Lunes a sábado · 08:00 a 20:00")
-  descripcion   String   @default("Vendemos paltas, limones y naranjas al por mayor y al detalle. Traemos la fruta directo del productor y la dejamos al precio más conveniente de Rancagua, en cajas, bins o por kilo, para ferias, almacenes, restaurantes y para tu casa.")
-  mapaUrl       String   @default("")
-  galeria       String   @default("[]") // JSON array de rutas de imagen
+  numerosWhatsapp String @default("[]") @db.VarChar(2000)
+  /// Los tres sellos bajo los botones de la portada. JSON de strings; vacío
+  /// o roto cae a los de fábrica para que la portada nunca quede pelada.
+  portadaSellos String @default("[]") @db.VarChar(400)
+  /// Títulos de la sección de productos, donde se explica que todo es al por
+  /// mayor. Se editan desde el panel porque son el texto que más se ajusta.
+  catalogoTitulo String @default("Siempre precio por mayor")
+  catalogoBajada String @default("Acá no vendemos al detalle, todo es al por mayor. Consulte por los mejores productos de la región y lleve calidad hasta su negocio.") @db.VarChar(400)
+  horario       String   @default("Lunes a viernes de 9:00 a 20:00, sábado de 9:00 a 15:00")
+  descripcion   String   @default("Traemos la fruta directo del productor y la dejamos al precio más conveniente de Rancagua. Vendemos solo al por mayor, en cajas, bins o por kilo, para ferias, almacenes, restaurantes y locales comerciales.") @db.VarChar(700)
+  mapaUrl       String   @default("") @db.VarChar(600)
+  galeria       String   @default("[]") @db.VarChar(3000) // JSON array de rutas de imagen
   actualizadoEn DateTime @updatedAt
 }

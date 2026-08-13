@@ -14,37 +14,31 @@ export default function FranjaAhorro() {
       blurDataURL={BLUR_TEXTURAS.limones}
       profundidad={0.45}
       velo={0.62}
-      className="min-h-[78svh] py-28 md:py-32"
+      // En móvil la franja es un respiro, no una sección: con 78svh se comía
+      // una pantalla entera de scroll para mostrar una sola frase.
+      className="min-h-[52svh] py-16 md:min-h-[78svh] md:py-32"
     >
       <h2
         className="mx-auto font-titulo text-white"
         style={{
           fontSize: "clamp(1.6rem, 5.2vw, 3.6rem)",
           lineHeight: 1.1,
-          // 20ch: con menos, "DONDE AHORRAR ES" se parte en móvil y el "ES"
-          // queda solo en una línea.
+          // 20ch: con menos, "PRECIOS AL ALCANCE" se parte en móvil y deja
+          // una palabra suelta en su propia línea.
           maxWidth: "20ch",
           textShadow: "0 6px 40px rgba(0,0,0,.55)",
         }}
       >
         <span className="block">
-          <TextoRevelado texto="DONDE " modo="palabra" as="span" />
-          <TextoRevelado
-            texto="AHORRAR"
-            modo="palabra"
-            as="span"
-            delayInicial={0.08}
-            className="text-verde-300"
-          />
-          <TextoRevelado texto=" ES" modo="palabra" as="span" delayInicial={0.16} />
+          <TextoRevelado texto="PRECIOS AL" modo="palabra" as="span" />
         </span>
         <span className="block">
-          <TextoRevelado texto="LA ÚNICA " modo="palabra" as="span" delayInicial={0.24} />
+          <TextoRevelado texto="ALCANCE DE SU " modo="palabra" as="span" delayInicial={0.16} />
           <TextoRevelado
-            texto="OPCIÓN"
+            texto="BOLSILLO"
             modo="palabra"
             as="span"
-            delayInicial={0.36}
+            delayInicial={0.32}
             className="text-verde-300"
           />
         </span>
@@ -55,7 +49,7 @@ export default function FranjaAhorro() {
           className="mx-auto mt-6 text-white/85"
           style={{ fontSize: "var(--text-cuerpo)", maxWidth: "40ch" }}
         >
-          Un precio justo para locales comerciales o para comenzar a emprender.
+          Trato de primera mano, atendido por sus dueños.
         </p>
       </SeccionEntrada>
     </FranjaParallax>

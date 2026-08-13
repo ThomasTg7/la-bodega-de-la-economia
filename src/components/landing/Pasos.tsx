@@ -22,8 +22,8 @@ const PASOS = [
     texto: "Transferencia o efectivo en la bodega, como te acomode.",
   },
   {
-    titulo: "Te lo hacemos llegar",
-    texto: "Lo dejamos en tu local o lo retiras directo en la bodega, tú eliges.",
+    titulo: "Despachas en nuestra bodega",
+    texto: "Pasas a buscar tu pedido ya preparado, en Malleco #04, Cooperativa La Cruz.",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function Pasos() {
             className="mt-4 font-titulo text-verde-700"
             style={{ fontSize: "clamp(1.85rem, 4.6vw, 3.4rem)", lineHeight: 1.06 }}
           >
-            <TextoRevelado texto="Cuatro pasos y llega a tu local" modo="palabra" as="span" />
+            <TextoRevelado texto="Cuatro pasos y obtén nuestros productos" modo="palabra" as="span" />
           </h2>
         </SeccionEntrada>
 
