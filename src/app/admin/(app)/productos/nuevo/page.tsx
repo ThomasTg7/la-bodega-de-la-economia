@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { db } from "@/lib/db";
 import FormProducto from "@/components/admin/FormProducto";
 
-export default function PaginaNuevoProducto() {
+export default async function PaginaNuevoProducto() {
+  const ajustes = await db.ajustes.findUnique({ where: { id: "sitio" } });
   return (
     <div>
       <Link href="/admin/productos" className="text-sm text-tinta-suave hover:text-tinta">
@@ -11,7 +13,7 @@ export default function PaginaNuevoProducto() {
         Nuevo producto
       </h1>
       <div className="mt-6">
-        <FormProducto />
+        <FormProducto pedidoMinimo={ajustes?.pedidoMinimoKg} />
       </div>
     </div>
   );

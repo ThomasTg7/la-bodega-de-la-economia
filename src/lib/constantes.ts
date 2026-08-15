@@ -52,6 +52,7 @@ export const DIMENSIONES_RECORTE: Record<string, { w: number; h: number }> = {
   "palta-hass": { w: 452, h: 620 },
   limon: { w: 428, h: 440 },
   naranja: { w: 440, h: 440 },
+  mandarina: { w: 454, h: 440 },
 };
 
 export const DIMENSION_RECORTE_DEFECTO = { w: 440, h: 440 };
@@ -88,6 +89,10 @@ export const TIKTOK_URL = "https://www.tiktok.com/@la_bodega_de_la_economia";
  * Piso para hacer un pedido. La bodega vende solo al por mayor, así que bajo
  * esta cantidad no se despacha: la calculadora parte acá y el catálogo lo
  * dice antes de que alguien escriba.
+ *
+ * El valor de verdad vive en `Ajustes.pedidoMinimoKg` y se edita desde el
+ * panel. Este es el respaldo: lo usan las pantallas que no tienen los ajustes
+ * a mano y es el default de la columna en la base.
  */
 export const PEDIDO_MINIMO_KG = 100;
 

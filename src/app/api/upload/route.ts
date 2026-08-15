@@ -3,13 +3,76 @@ import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { leerSesion } from "@/lib/sesion";
 
-const TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const TIPOS_PERMITIDOS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+];
 const TAMANO_MAXIMO = 8 * 1024 * 1024; // 8 MB
+
+/**
+ * Las fotos de iPhone salen en HEIC y el navegador es poco de fiar con ese
+ * formato: Safari manda "image/heic", pero Chrome y Firefox en Windows suelen
+ * mandar "" o "application/octet-stream" porque el sistema no tiene el tipo
+ * registrado. Por eso la extensión también vale como prueba.
+ */
+function pareceHeic(archivo: File) {
+  return (
+    archivo.type === "image/heic" ||
+    archivo.type === "image/heif" ||
+    /\.hei[cf]$/i.test(archivo.name)
+  );
+}
+
+/**
+ * Devuelve un buffer que sharp sepa leer.
+ *
+ * Los binarios precompilados de sharp traen libheif solo con AV1, no con
+ * HEVC, que es lo que usa el iPhone: un .heic de teléfono no lo abre. Cuando
+ * pasa eso se decodifica con heic-convert, que es JavaScript puro y no
+ * depende de códecs del sistema. Va en import dinámico para que una subida
+ * normal —que es casi siempre— no cargue esa librería.
+ */
+async function aBufferLegible(buffer: Buffer, heic: boolean): Promise<Buffer> {
+  try {
+    await sharp(buffer).metadata();
+    return buffer;
+  } catch (error) {
+    if (!heic) throw error;
+  }
+
+  const convertir = (await import("heic-convert")).default;
+  const jpeg = await convertir({ buffer, format: "JPEG", quality: 0.94 });
+  return Buffer.from(jpeg);
+}
 
 /** La foto de catálogo llega a usarse a ancho completo en la portada. */
 const ANCHO_CATALOGO = 1600;
 /** El recorte se dibuja a ~260px de alto como máximo. */
 const ANCHO_RECORTE = 900;
+/** El carrusel del local no pasa de ~330px de ancho: 1200 cubre DPR 3. */
+const ANCHO_GALERIA = 1200;
+
+/**
+ * Cada destino tiene su tamaño y su calidad. La galería es la más exigente
+ * de las tres: son fotos del local y de la fruta, se miran de cerca y no
+ * llevan transparencia, así que se achican poco y se comprimen menos.
+ */
+const PERFILES = {
+  catalogo: { ancho: ANCHO_CATALOGO, calidad: 78 },
+  recorte: { ancho: ANCHO_RECORTE, calidad: 86 },
+  galeria: { ancho: ANCHO_GALERIA, calidad: 82 },
+} as const;
+
+type Destino = keyof typeof PERFILES;
+
+function destinoDe(tipo: string | null): Destino {
+  if (tipo === "recorte" || tipo === "galeria") return tipo;
+  return "catalogo";
+}
 
 function slugificar(texto: string) {
   return texto
@@ -33,9 +96,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Falta el archivo." }, { status: 400 });
   }
 
-  if (!TIPOS_PERMITIDOS.includes(archivo.type)) {
+  const heic = pareceHeic(archivo);
+  if (!heic && !TIPOS_PERMITIDOS.includes(archivo.type)) {
     return NextResponse.json(
-      { error: "Formato no admitido. Sube una imagen JPG, PNG, WebP o AVIF." },
+      { error: "Formato no admitido. Sube una imagen JPG, PNG, HEIC, WebP o AVIF." },
       { status: 400 }
     );
   }
@@ -46,7 +110,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const esRecorte = request.nextUrl.searchParams.get("tipo") === "recorte";
+  const destino = destinoDe(request.nextUrl.searchParams.get("tipo"));
+  const perfil = PERFILES[destino];
   const buffer = Buffer.from(await archivo.arrayBuffer());
   const base = slugificar(archivo.name.replace(/\.[^.]+$/, ""));
   // Todo sale en WebP, incluidos los recortes: soporta transparencia igual
@@ -61,17 +126,19 @@ export async function POST(request: NextRequest) {
   try {
     // El canal alfa se lee del original: si el recorte no lo trae, la fruta
     // llega con un rectángulo blanco detrás y hay que avisarlo en el panel.
-    const metadatos = await sharp(buffer).metadata();
+    const legible = await aBufferLegible(buffer, heic);
+    const metadatos = await sharp(legible).metadata();
     tieneAlfa = Boolean(metadatos.hasAlpha);
 
-    procesada = await sharp(buffer)
+    procesada = await sharp(legible)
+      // `rotate()` sin argumentos aplica la orientación del EXIF: las fotos
+      // de teléfono vienen acostadas con la rotación anotada aparte.
       .rotate()
-      // El recorte nunca se dibuja más alto que ~260px en pantalla, así que
-      // 900px de ancho ya cubre pantallas retina de sobra. La foto de
-      // catálogo sí se usa a lo ancho completo en la portada.
-      .resize({ width: esRecorte ? ANCHO_RECORTE : ANCHO_CATALOGO, withoutEnlargement: true })
+      // `withoutEnlargement`: una foto más chica que el perfil se deja como
+      // está. Estirarla solo sumaría peso, no detalle.
+      .resize({ width: perfil.ancho, withoutEnlargement: true })
       .webp({
-        quality: esRecorte ? 86 : 78,
+        quality: perfil.calidad,
         alphaQuality: 90,
         // `effort` sube el tiempo de compresión a cambio de menos peso. En
         // una subida manual desde el panel, un par de cientos de ms extra no
@@ -96,7 +163,7 @@ export async function POST(request: NextRequest) {
   // repetido si dos subidas caen en el mismo milisegundo.
   let subida: Awaited<ReturnType<typeof put>>;
   try {
-    subida = await put(`productos/${nombreArchivo}`, procesada, {
+    subida = await put(`${destino === "galeria" ? "local" : "productos"}/${nombreArchivo}`, procesada, {
       access: "public",
       contentType: "image/webp",
       addRandomSuffix: true,

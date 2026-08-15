@@ -148,9 +148,8 @@ print("  textura paltas-movil.webp (pre-desenfocada)")
 
 
 # ---------- 4. LOGOS ----------
-pub = RAIZ / "public"
-Image.open(ORIG / "logo-limpio.png").resize((512, 512), Image.LANCZOS)\
-    .save(pub / "logo.png", optimize=True)
-Image.open(ORIG / "logo-con-titulo.png").resize((1024, 1024), Image.LANCZOS)\
-    .save(pub / "logo-titulo.png", optimize=True)
+# Los hacia este script, escribiendo public/logo.png y public/logo-titulo.png.
+# Ese logo ya no se usa: ahora es uno solo, en WebP, y lo genera
+# scripts/preparar-logo.py desde imagenes-bodega/logo-nuevo.png. Correr esto
+# de nuevo resucitaba los dos PNG viejos en public/.
 print("Listo.")

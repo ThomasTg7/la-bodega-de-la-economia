@@ -51,8 +51,11 @@ next-env.d.ts
 /public/uploads/*
 !/public/uploads/.gitkeep
 
-# originales pesados (no se sirven, quedan solo en local)
-/assets-originales/*.png
+# originales pesados (no se sirven, quedan solo en local): son ~85 MB de
+# fotos en crudo. Lo que la web usa sale de ahí ya procesado por los scripts
+# de scripts/ y eso sí se versiona, en public/.
+/assets-originales/
+/imagenes-bodega/
 
 # Schema de MariaDB: se genera desde prisma/schema.prisma.
 prisma/schema.mariadb.prisma

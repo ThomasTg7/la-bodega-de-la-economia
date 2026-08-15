@@ -51,7 +51,7 @@ export default function BarraLateral({ mensajesSinLeer = 0 }: { mensajesSinLeer?
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-tinta/[0.07] bg-white p-4 md:flex">
         <Link href="/admin" className="mb-7 flex items-center gap-2.5 px-2 pt-2">
           <motion.span whileHover={{ rotate: -8, scale: 1.08 }} transition={resorte}>
-            <Image src="/logo.png" width={34} height={34} alt="" />
+            <Image src="/logo.webp" width={34} height={34} alt="" />
           </motion.span>
           <span className="font-titulo text-sm leading-tight text-verde-700">
             La bodega

@@ -8,24 +8,29 @@ import ObjetoFlotante from "@/components/motion/ObjetoFlotante";
 import TextoRevelado from "@/components/motion/TextoRevelado";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { calcular, clp } from "@/lib/precios";
-import {
-  DIMENSIONES_RECORTE,
-  DIMENSION_RECORTE_DEFECTO,
-  PEDIDO_MINIMO_KG,
-} from "@/lib/constantes";
+import { DIMENSIONES_RECORTE, DIMENSION_RECORTE_DEFECTO } from "@/lib/constantes";
 import { EASE_REBOTE } from "@/lib/motion-config";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 
-type Props = { productos: Producto[] };
+type Props = {
+  productos: Producto[];
+  /** Kilos minimos por pedido, del campo del panel. */
+  pedidoMinimo: number;
+};
 
-export default function Calculadora({ productos }: Props) {
+export default function Calculadora({ productos, pedidoMinimo }: Props) {
   const disponibles = useMemo(() => productos.filter((p) => p.activo), [productos]);
   const [slugActivo, setSlugActivo] = useState(disponibles[0]?.slug ?? "");
   // La calculadora parte en el pedido mas chico que se acepta: mostrar 10 kg
   // cuando el minimo son 100 solo llevaba a que alguien armara un pedido que
   // despues no se le puede tomar.
-  const [kilos, setKilos] = useState(PEDIDO_MINIMO_KG);
-  const [textoKilos, setTextoKilos] = useState(String(PEDIDO_MINIMO_KG));
+  const [kilos, setKilos] = useState(pedidoMinimo);
+  const [textoKilos, setTextoKilos] = useState(String(pedidoMinimo));
+  // El sello de precio mayorista aparece cuando la persona mueve la bolita o
+  // escribe una cantidad, no al cargar la página: es la respuesta a lo que
+  // acaba de hacer. Con el sello puesto de entrada no se lee como respuesta,
+  // se lee como decoración.
+  const [tocado, setTocado] = useState(false);
   const { abrir } = useBurbujaWhatsApp();
 
   const producto = disponibles.find((p) => p.slug === slugActivo) ?? disponibles[0] ?? null;
@@ -54,21 +59,23 @@ export default function Calculadora({ productos }: Props) {
   }
 
   const dim = DIMENSIONES_RECORTE[producto.slug] ?? DIMENSION_RECORTE_DEFECTO;
-  // El recorrido arranca en el minimo y llega al triple, con el umbral del
-  // descuento siempre dentro de la pista aunque este cargado mas alto.
-  const topeSlider = Math.max(PEDIDO_MINIMO_KG * 3, producto.kilosDescuento * 2);
+  // El recorrido arranca en el minimo y llega al triple.
+  const topeSlider = Math.max(pedidoMinimo * 3, producto.kilosDescuento * 2);
   const enPista = (n: number) =>
-    ((Math.min(topeSlider, Math.max(PEDIDO_MINIMO_KG, n)) - PEDIDO_MINIMO_KG) /
-      (topeSlider - PEDIDO_MINIMO_KG)) *
+    ((Math.min(topeSlider, Math.max(pedidoMinimo, n)) - pedidoMinimo) /
+      (topeSlider - pedidoMinimo)) *
     100;
-  const valorSlider = Math.min(topeSlider, Math.max(PEDIDO_MINIMO_KG, kilos));
+  const valorSlider = Math.min(topeSlider, Math.max(pedidoMinimo, kilos));
   // Solo se llega acá escribiendo a mano en el campo: el slider no baja del
   // mínimo.
-  const bajoElMinimo = kilos < PEDIDO_MINIMO_KG;
+  const bajoElMinimo = kilos < pedidoMinimo;
   const porcentaje = enPista(kilos);
-  const porcentajeUmbral = enPista(producto.kilosDescuento);
+  // Todo lo que se pide por acá ya es al por mayor: el mínimo es el piso de
+  // la venta. Por eso el sello depende de haber tocado la calculadora y no de
+  // cruzar una cantidad exacta.
+  const esMayorista = tocado && !bajoElMinimo;
 
-  const fondoPista = resultado.usaDescuento
+  const fondoPista = esMayorista
     ? `linear-gradient(to right, var(--color-limon) 0%, var(--color-limon) ${porcentaje}%, #e2e8f0 ${porcentaje}%, #e2e8f0 100%)`
     : `linear-gradient(to right, var(--color-verde-600) 0%, var(--color-cyan-400) ${porcentaje}%, #e2e8f0 ${porcentaje}%, #e2e8f0 100%)`;
 
@@ -76,10 +83,11 @@ export default function Calculadora({ productos }: Props) {
     const limpio = Math.max(0, Math.min(9999, Math.round(nuevo)));
     setKilos(limpio);
     setTextoKilos(String(limpio));
+    setTocado(true);
   }
 
   function manejarEncargo() {
-    if (!producto || !resultado || kilos < PEDIDO_MINIMO_KG) return;
+    if (!producto || !resultado || kilos < pedidoMinimo) return;
     abrir({
       asunto: "Compra",
       mensaje: `Quiero encargar ${kilos} kg de ${producto.nombre}. Según su calculadora serían ${clp(
@@ -184,7 +192,7 @@ export default function Calculadora({ productos }: Props) {
             htmlFor="calc-kilos"
             className="block text-sm font-semibold text-tinta"
           >
-            ¿Cuántos kilos te llevas? (mínimo {PEDIDO_MINIMO_KG} kg)
+            ¿Cuántos kilos te llevas? (mínimo {pedidoMinimo} kg)
           </label>
 
           <div className="mt-3 flex items-center gap-4">
@@ -192,7 +200,7 @@ export default function Calculadora({ productos }: Props) {
               <input
                 id="calc-kilos"
                 type="range"
-                min={PEDIDO_MINIMO_KG}
+                min={pedidoMinimo}
                 max={topeSlider}
                 step={10}
                 value={valorSlider}
@@ -200,18 +208,10 @@ export default function Calculadora({ productos }: Props) {
                 className="control-slider"
                 style={{ "--fondo-pista": fondoPista } as React.CSSProperties}
                 aria-valuenow={kilos}
-                aria-valuemin={PEDIDO_MINIMO_KG}
+                aria-valuemin={pedidoMinimo}
                 aria-valuemax={topeSlider}
                 aria-valuetext={`${kilos} kilos`}
               />
-              <div
-                className="pointer-events-none absolute top-1/2 h-3 w-px -translate-y-1/2 bg-tinta/30"
-                style={{ left: `${porcentajeUmbral}%` }}
-              >
-                <span className="absolute top-4 -translate-x-1/2 text-[10px] whitespace-nowrap text-tinta-suave">
-                  {producto.kilosDescuento} kg
-                </span>
-              </div>
             </div>
 
             <div className="flex items-center gap-1 rounded-xl border border-tinta/15 px-3 py-2">
@@ -224,6 +224,7 @@ export default function Calculadora({ productos }: Props) {
                   setTextoKilos(e.target.value);
                   const n = Number(e.target.value);
                   if (!Number.isNaN(n)) setKilos(Math.max(0, n));
+                  setTocado(true);
                 }}
                 onBlur={() => actualizarKilos(kilos)}
                 className="w-14 bg-transparent text-right font-semibold text-tinta outline-none"
@@ -253,7 +254,7 @@ export default function Calculadora({ productos }: Props) {
               </div>
 
               <AnimatePresence>
-                {resultado.usaDescuento && (
+                {esMayorista && (
                   <motion.div
                     key="sello"
                     initial={{ opacity: 0 }}
@@ -298,10 +299,10 @@ export default function Calculadora({ productos }: Props) {
                           <path d="M20.6 13.4 12.4 21.6a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a2 2 0 0 1 2-2h9a2 2 0 0 1 1.4.6l6.4 6.4a2 2 0 0 1 0 2.8Z" />
                           <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
                         </svg>
-                        DESCUENTO APLICADO
+                        PRECIO MAYORISTA
                       </span>
                       <span className="sr-only" aria-live="polite">
-                        Descuento por volumen aplicado
+                        Precio mayorista aplicado
                       </span>
                     </motion.div>
                   </motion.div>
@@ -309,30 +310,20 @@ export default function Calculadora({ productos }: Props) {
               </AnimatePresence>
             </div>
 
-            {/* El aviso del mínimo manda sobre el del descuento: de nada
-                sirve decirle a alguien cuánto le falta para la rebaja si el
-                pedido todavía no alcanza para tomarse. */}
+            {/* El aviso del mínimo manda: de nada sirve hablar de ahorro si
+                el pedido todavía no alcanza para tomarse. */}
             {bajoElMinimo ? (
               <p className="mt-3 text-sm font-medium" style={{ color: "var(--color-naranja-texto)" }}>
-                El pedido mínimo es de {PEDIDO_MINIMO_KG} kg — te faltan{" "}
-                {PEDIDO_MINIMO_KG - kilos} kg
+                El pedido mínimo es de {pedidoMinimo} kg — te faltan{" "}
+                {pedidoMinimo - kilos} kg
               </p>
             ) : (
-              <>
-                {!resultado.usaDescuento && resultado.faltan > 0 && (
-                  <p
-                    className="mt-3 text-sm font-medium"
-                    style={{ color: "var(--color-naranja-texto)" }}
-                  >
-                    Te faltan {resultado.faltan} kg para el precio con descuento
-                  </p>
-                )}
-                {resultado.usaDescuento && resultado.ahorro > 0 && (
-                  <p className="mt-3 text-sm font-medium text-verde-600">
-                    Estás ahorrando {clp(resultado.ahorro)}
-                  </p>
-                )}
-              </>
+              resultado.usaDescuento &&
+              resultado.ahorro > 0 && (
+                <p className="mt-3 text-sm font-medium text-verde-600">
+                  Estás ahorrando {clp(resultado.ahorro)}
+                </p>
+              )
             )}
 
             <button
@@ -342,7 +333,7 @@ export default function Calculadora({ productos }: Props) {
               className="mt-5 w-full rounded-full border-2 border-cyan-500 py-3 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-50 disabled:cursor-not-allowed disabled:border-tinta/15 disabled:text-tinta-suave disabled:hover:bg-transparent"
             >
               {bajoElMinimo
-                ? `Sube a ${PEDIDO_MINIMO_KG} kg para encargar`
+                ? `Sube a ${pedidoMinimo} kg para encargar`
                 : `Encargar estos ${kilos} kg por WhatsApp`}
             </button>
           </div>

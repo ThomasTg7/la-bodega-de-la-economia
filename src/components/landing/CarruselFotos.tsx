@@ -123,7 +123,9 @@ export default function CarruselFotos({
             {fotos.map((foto, i) => (
               <motion.div
                 key={foto + i}
-                className="relative h-[92%] shrink-0 overflow-hidden rounded-[22px]"
+                className={`relative shrink-0 overflow-hidden rounded-[22px] ${
+                  ANCHO_SLIDE_PCT >= 100 ? "h-full" : "h-[92%]"
+                }`}
                 style={{ width: anchoSlide || "78%", marginRight: GAP_PX }}
                 animate={{ scale: i === index ? 1 : 0.92, opacity: i === index ? 1 : 0.6 }}
                 transition={{ duration: 0.4 }}

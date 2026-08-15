@@ -1,16 +1,15 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
 import TextoRevelado from "@/components/motion/TextoRevelado";
 import IconoTikTok from "./IconoTikTok";
+import FondoPortada from "./FondoPortada";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { REGION, TIKTOK_URL } from "@/lib/constantes";
 import { embedMapa } from "@/lib/mapa";
 import { ICONOS_SELLOS } from "@/lib/portada";
-import { EASE_SALIDA, RESORTE_UI, useEsMovil } from "@/lib/motion-config";
-import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
+import { EASE_SALIDA, RESORTE_UI } from "@/lib/motion-config";
 
 type Props = {
   /** Campo "Eslogan de la portada" del panel. */
@@ -29,7 +28,6 @@ type Props = {
 export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Props) {
   const heroRef = useRef<HTMLElement>(null);
   const { abrir } = useBurbujaWhatsApp();
-  const esMovil = useEsMovil();
 
   // El fondo se queda atrás mientras el contenido sube: el parallax nace del
   // propio scroll de la portada, no de una capa genérica.
@@ -37,8 +35,6 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const yFondo = useTransform(progresoHero, [0, 1], ["0%", "26%"]);
-  const escalaFondo = useTransform(progresoHero, [0, 1], [1.16, 1.3]);
   const yTexto = useTransform(progresoHero, [0, 0.8], [0, -120]);
   const opacidadTexto = useTransform(progresoHero, [0, 0.75], [1, 0]);
   const yMapa = useTransform(progresoHero, [0, 1], [0, -180]);
@@ -52,27 +48,32 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
       id="portada"
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-verde-700"
     >
-      {/* z0 — foto de bodega a sangre: se aleja y crece al hacer scroll */}
-      <motion.div
-        className="absolute inset-0 z-0"
-        style={{ y: yFondo, scale: escalaFondo }}
-      >
-        <Image
-          src={esMovil ? "/texturas/paltas-movil.webp" : "/texturas/paltas.webp"}
-          alt="Paltas Hass a granel en la bodega"
-          fill
-          priority
-          sizes="100vw"
-          placeholder="blur"
-          blurDataURL={BLUR_TEXTURAS.paltas}
-          className="object-cover"
-        />
-      </motion.div>
+      {/* z0 — fotos del local a sangre, cruzándose entre ellas. Sin parallax
+          ni escala: el único recorte tiene que ser el que hace object-cover
+          para llenar la pantalla. Una escala acá se le sumaría encima y la
+          foto volvería a verse agrandada. */}
+      <div className="absolute inset-0 z-0">
+        <FondoPortada />
+      </div>
 
-      {/* z1 — velo verde: el texto blanco tiene que leerse sí o sí */}
+      {/* z1 — velo verde: el texto blanco tiene que leerse sí o sí.
+          Son dos, y tienen que serlo: en escritorio el texto vive en la mitad
+          izquierda, así que el velo puede ser denso ahí y soltar la foto a la
+          derecha. En un teléfono el texto cruza todo el ancho, no hay lado
+          libre, y ese mismo degradado tapa la foto entera. El de móvil baja
+          la carga pareja y se apoya en la sombra del título para el
+          contraste. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1]"
+        className="pointer-events-none absolute inset-0 z-[1] md:hidden"
+        style={{
+          background:
+            "linear-gradient(105deg, rgba(1,69,43,.72) 0%, rgba(1,69,43,.58) 45%, rgba(1,69,43,.34) 100%), linear-gradient(to top, rgba(1,69,43,.78) 0%, transparent 45%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1] hidden md:block"
         style={{
           background:
             "linear-gradient(105deg, rgba(1,69,43,.95) 0%, rgba(1,69,43,.82) 45%, rgba(1,69,43,.42) 100%), linear-gradient(to top, rgba(1,69,43,.92) 0%, transparent 40%)",
@@ -82,7 +83,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
       {/* El nav flotante recién aparece pasado el 70% de la portada, así que
           arriba no hay nada que esquivar: el respiro alcanza con la mitad de
           lo que había y el bloque de texto arranca mucho más arriba. */}
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-x-12 gap-y-8 px-6 pt-12 pb-16 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-stretch md:gap-y-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:px-10 md:pt-14 md:pb-20">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-x-12 gap-y-5 px-6 pt-7 pb-10 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-stretch md:gap-y-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:px-10 md:pt-14 md:pb-20">
         {/* Bloque de texto */}
         <motion.div style={{ y: yTexto, opacity: opacidadTexto }}>
           <motion.p
@@ -122,7 +123,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
               aparte y más chico: ahí la columna cae a ~337px y con el vw de
               lg el título se partía. */}
           <h1
-            className="mt-5 font-titulo text-[clamp(2.6rem,13.6vw,5.5rem)] text-white md:text-[clamp(2.6rem,5.4vw,4rem)] lg:text-[clamp(3rem,7vw,6.5rem)]"
+            className="mt-4 font-titulo text-[clamp(2.6rem,13.6vw,5.5rem)] md:mt-5 text-white md:text-[clamp(2.6rem,5.4vw,4rem)] lg:text-[clamp(3rem,7vw,6.5rem)]"
             style={{
               lineHeight: 1.02,
               letterSpacing: "-0.015em",
@@ -158,7 +159,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE_SALIDA, delay: 0.5 }}
-              className="mt-6 text-[length:var(--text-cuerpo)] text-white/85 md:text-[1.05rem] lg:text-[1.3rem]"
+              className="mt-5 text-[length:var(--text-cuerpo)] text-white/85 md:mt-6 md:text-[1.05rem] lg:text-[1.3rem]"
               style={{ lineHeight: 1.6, maxWidth: "42ch" }}
             >
               {eslogan}
@@ -176,7 +177,18 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
             otras dos quedaban como un hueco vacío al lado del mapa. */}
         <motion.aside
           style={{ y: yMapa }}
-          className="relative mx-auto w-full max-w-[420px] md:mx-0 md:max-w-none lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:ml-auto lg:flex lg:max-w-[425px] lg:items-center"
+          // El `py` de móvil no es un respiro cualquiera: devuelve el alto
+          // que se le sacó al mapa, así que los botones se quedan donde
+          // estaban y lo que se libera queda como franja limpia de foto. Va
+          // repartido en partes iguales arriba y abajo para que la tarjeta
+          // quede con el mismo aire contra el eslogan que contra los botones.
+          //
+          // Va en svh y no en px para que esa franja sea lo primero que ceda
+          // en una pantalla corta: en un teléfono de 740px de alto vale 30 por
+          // lado y el bloque entero sigue entrando, en uno de 844 vale 34 y se
+          // ve más foto. Con un valor fijo, los teléfonos chicos se pasaban de
+          // largo justo por esos 16px.
+          className="relative mx-auto w-full max-w-[300px] py-[4svh] sm:py-0 md:mx-0 md:max-w-none lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:ml-auto lg:flex lg:max-w-[425px] lg:items-center"
         >
           {/* La entrada va en su propia capa: el `y` de la tarjeta es el del
               parallax de scroll, y dos animaciones sobre el mismo eje en el
@@ -197,7 +209,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
                 title="Mapa de La bodega de la economía"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="block h-[240px] w-full border-0 sm:h-[290px] md:h-[320px] lg:h-[400px]"
+                className="block h-[140px] w-full border-0 sm:h-[290px] md:h-[320px] lg:h-[400px]"
               />
 
               <a
@@ -296,8 +308,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
             className="justify-center gap-2 bg-[#010101] px-5 py-3.5 text-sm text-white shadow-[0_12px_32px_rgba(254,44,85,.28)] sm:px-8 sm:py-4 sm:text-base lg:px-9 lg:py-[1.15rem] lg:text-lg"
           >
             <IconoTikTok />
-            <span className="sm:hidden">TikTok</span>
-            <span className="hidden sm:inline">Míranos en TikTok</span>
+            Ver TikTok
           </BotonSuave>
 
         </motion.div>

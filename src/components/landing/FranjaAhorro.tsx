@@ -5,7 +5,7 @@ import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
 import FranjaParallax from "./FranjaParallax";
 
-/** Franja de respiro entre la portada y el catálogo. Solo una frase. */
+/** Franja de respiro entre "Quiénes somos" y los pasos. Solo una frase. */
 export default function FranjaAhorro() {
   return (
     <FranjaParallax
@@ -14,14 +14,15 @@ export default function FranjaAhorro() {
       blurDataURL={BLUR_TEXTURAS.limones}
       profundidad={0.45}
       velo={0.62}
-      // En móvil la franja es un respiro, no una sección: con 78svh se comía
-      // una pantalla entera de scroll para mostrar una sola frase.
-      className="min-h-[52svh] py-16 md:min-h-[78svh] md:py-32"
+      // La franja es un respiro, no una sección: con 78svh se comía una
+      // pantalla entera de scroll para mostrar una sola frase. La frase ahora
+      // es más grande, así que el alto se apoya menos en el vacío.
+      className="min-h-[42svh] py-12 md:min-h-[62svh] md:py-24"
     >
       <h2
         className="mx-auto font-titulo text-white"
         style={{
-          fontSize: "clamp(1.6rem, 5.2vw, 3.6rem)",
+          fontSize: "clamp(2.1rem, 7.4vw, 4.4rem)",
           lineHeight: 1.1,
           // 20ch: con menos, "PRECIOS AL ALCANCE" se parte en móvil y deja
           // una palabra suelta en su propia línea.

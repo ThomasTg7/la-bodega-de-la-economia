@@ -107,5 +107,9 @@ model Ajustes {
   descripcion   String   @default("Traemos la fruta directo del productor y la dejamos al precio más conveniente de Rancagua. Vendemos solo al por mayor, en cajas, bins o por kilo, para ferias, almacenes, restaurantes y locales comerciales.") @db.VarChar(700)
   mapaUrl       String   @default("") @db.VarChar(600)
   galeria       String   @default("[]") @db.VarChar(3000) // JSON array de rutas de imagen
+  /// Piso del pedido, en kilos. La bodega vende solo al por mayor y ese piso
+  /// se mueve segun la temporada, asi que se edita desde el panel en vez de
+  /// estar clavado en el codigo. Siempre en kg: no hay otra unidad de venta.
+  pedidoMinimoKg Int     @default(100)
   actualizadoEn DateTime @updatedAt
 }

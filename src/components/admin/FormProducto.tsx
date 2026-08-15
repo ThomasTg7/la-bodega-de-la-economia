@@ -61,7 +61,16 @@ function slugificar(texto: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export default function FormProducto({ productoExistente }: { productoExistente?: Producto }) {
+export default function FormProducto({
+  productoExistente,
+  // El mínimo vive en Ajustes y esta pantalla solo lo menciona en la ayuda del
+  // umbral de descuento. Llega por prop desde la página, que ya consulta la
+  // base; el respaldo es el mismo default de la columna.
+  pedidoMinimo = PEDIDO_MINIMO_KG,
+}: {
+  productoExistente?: Producto;
+  pedidoMinimo?: number;
+}) {
   const router = useRouter();
   const { mostrar } = useToast();
   const reducido = useMovimientoReducido();
@@ -344,7 +353,7 @@ export default function FormProducto({ productoExistente }: { productoExistente?
             <p className="mt-1.5 text-xs text-tinta-suave">
               Es la línea donde cambia el precio: sobre esta cantidad, la página y la
               calculadora pasan solas al precio con descuento. El pedido más chico que se
-              acepta es de {PEDIDO_MINIMO_KG} kg, así que poner menos que eso no cambia
+              acepta es de {pedidoMinimo} kg, así que poner menos que eso no cambia
               nada — el descuento saldría siempre.
             </p>
           </div>

@@ -7,19 +7,13 @@ import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import CarruselFotos from "./CarruselFotos";
 import { formatearTelefonoChile } from "@/lib/whatsapp";
 import { linkMapa } from "@/lib/mapa";
+import { GALERIA_DEFECTO, parsearGaleria } from "@/lib/galeria";
 
 type Props = { ajustes: Ajustes };
 
 function galeriaDe(ajustes: Ajustes): string[] {
-  try {
-    const lista = JSON.parse(ajustes.galeria) as unknown;
-    if (Array.isArray(lista) && lista.length > 0) {
-      return lista.filter((x): x is string => typeof x === "string");
-    }
-  } catch {
-    // JSON inválido -> cae al respaldo
-  }
-  return ["/texturas/paltas.webp", "/texturas/limones.webp", "/texturas/naranjas.webp", "/logo.png"];
+  const fotos = parsearGaleria(ajustes.galeria);
+  return fotos.length > 0 ? fotos : [...GALERIA_DEFECTO];
 }
 
 export default function Ubicacion({ ajustes }: Props) {

@@ -8,12 +8,14 @@ import NumeroEscrito from "@/components/motion/NumeroEscrito";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { clp } from "@/lib/precios";
-import { PEDIDO_MINIMO_KG } from "@/lib/constantes";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
 
 type Props = {
   producto: Producto;
   indice: number;
+  /** Kilos minimos por pedido, del campo del panel. Va en el mensaje de
+   *  WhatsApp para que nadie pida menos de lo que se puede despachar. */
+  pedidoMinimo: number;
 };
 
 // Los slugs no calzan uno a uno con los nombres de archivo (palta-hass ->
@@ -22,15 +24,17 @@ const TEXTURA_POR_SLUG: Record<string, string> = {
   "palta-hass": "/texturas/paltas.webp",
   limon: "/texturas/limones.webp",
   naranja: "/texturas/naranjas.webp",
+  mandarina: "/texturas/mandarinas.webp",
 };
 
 const BLUR_POR_SLUG: Record<string, string> = {
   "palta-hass": BLUR_TEXTURAS.paltas,
   limon: BLUR_TEXTURAS.limones,
   naranja: BLUR_TEXTURAS.naranjas,
+  mandarina: BLUR_TEXTURAS.mandarinas,
 };
 
-export default function TarjetaProducto({ producto, indice }: Props) {
+export default function TarjetaProducto({ producto, indice, pedidoMinimo }: Props) {
   const { abrir } = useBurbujaWhatsApp();
   const precioRef = useRef<HTMLDivElement>(null);
   const precioEnVista = useInView(precioRef, { once: true, amount: 0.4 });
@@ -70,6 +74,28 @@ export default function TarjetaProducto({ producto, indice }: Props) {
               Más pedido
             </span>
           )}
+
+          {/* Logo en la esquina de arriba a la derecha: la de la izquierda ya
+              la ocupa el sello de "Más pedido". Va sobre un disco blanco
+              porque la foto de fruta debajo cambia de color en cada tarjeta y
+              el logo solo no siempre se recorta contra ella.
+
+              `alt=""` y aria-hidden: es la marca del propio sitio repetida en
+              cada tarjeta, no un dato del producto. Un lector de pantalla
+              leyendo "La bodega de la economía" tres veces seguidas antes de
+              cada precio solo estorba. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-3 right-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_14px_rgba(0,0,0,.18)] backdrop-blur-[2px] md:h-14 md:w-14"
+          >
+            <Image
+              src="/logo.webp"
+              alt=""
+              width={56}
+              height={56}
+              className="h-9 w-9 object-contain md:h-11 md:w-11"
+            />
+          </span>
         </div>
 
         <div className="flex flex-1 flex-col p-6">
@@ -106,7 +132,10 @@ export default function TarjetaProducto({ producto, indice }: Props) {
                   /{producto.unidad}
                 </span>
               </p>
-              <p className="mt-2 text-[13px] text-tinta-suave">Precio hasta agotar stock</p>
+              <p className="mt-2 text-[13px] text-tinta-suave">
+                Precio hasta agotar stock. Puede variar según el calibre y la calidad de cada
+                partida.
+              </p>
             </div>
           )}
 
@@ -115,7 +144,7 @@ export default function TarjetaProducto({ producto, indice }: Props) {
             onClick={() =>
               abrir({
                 asunto: "Cotización",
-                mensaje: `Quiero cotizar ${producto.nombre}. Necesito ___ ${producto.unidad} (el pedido mínimo es de ${PEDIDO_MINIMO_KG} kg).`,
+                mensaje: `Quiero cotizar ${producto.nombre}. Necesito ___ ${producto.unidad} (el pedido mínimo es de ${pedidoMinimo} kg).`,
               })
             }
             whileHover={{ scale: 1.02 }}

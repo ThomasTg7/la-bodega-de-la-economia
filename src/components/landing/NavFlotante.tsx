@@ -121,7 +121,7 @@ export default function NavFlotante() {
           }}
         >
           <a href="#" aria-label="Inicio" className="mr-1 shrink-0">
-            <Image src="/logo.png" width={32} height={32} alt="" className="rounded-full" />
+            <Image src="/logo.webp" width={32} height={32} alt="" className="rounded-full" />
           </a>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -171,7 +171,7 @@ export default function NavFlotante() {
             aria-label="Menú"
           >
             <div className="flex justify-between items-center p-6">
-              <Image src="/logo.png" width={36} height={36} alt="" />
+              <Image src="/logo.webp" width={36} height={36} alt="" />
               <button
                 type="button"
                 onClick={() => setMenuAbierto(false)}

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MAX_FOTOS_GALERIA } from "./galeria";
+
 export const esquemaLogin = z.object({
   email: z.string().trim().toLowerCase().email(),
   clave: z.string().min(1),
@@ -76,6 +78,9 @@ export const esquemaAjustes = z.object({
       "Cada número necesita al menos 8 dígitos y un peso entre 0 y 100."
     ),
   horario: z.string().trim().max(120).optional(),
+  // Siempre en kilos: la bodega no vende en otra unidad. El tope de 10.000 es
+  // para que un cero de más no deje la tienda sin poder venderle a nadie.
+  pedidoMinimoKg: z.coerce.number().int().min(1).max(10000).optional(),
   descripcion: z.string().trim().max(600).optional(),
   // Los tres sellos viajan como texto JSON. Vacíos se permiten: al leerlos,
   // parsearSellos() rellena cada hueco con el texto de fábrica.
@@ -100,7 +105,16 @@ export const esquemaAjustes = z.object({
       "El link del mapa tiene que empezar con https://"
     )
     .optional(),
-  galeria: z.string().optional(),
+  // Igual que los sellos: viaja como texto JSON y el contenido se revisa
+  // aparte. El tope de fotos se valida acá y no solo en el panel, que es
+  // donde se ve el contador: el panel es una pantalla, no una cerradura.
+  galeria: z
+    .string()
+    .optional()
+    .refine(
+      (s) => s === undefined || esListaGaleriaValida(s),
+      `El carrusel admite hasta ${MAX_FOTOS_GALERIA} fotos.`
+    ),
 });
 
 const esquemaNumeroWhatsapp = z.object({
@@ -111,6 +125,17 @@ const esquemaNumeroWhatsapp = z.object({
     .refine((n) => n.replace(/\D/g, "").length >= 8, "Número demasiado corto"),
   peso: z.number().min(0).max(100),
 });
+
+function esListaGaleriaValida(json: string) {
+  try {
+    return z
+      .array(z.string().trim().min(1).max(500))
+      .max(MAX_FOTOS_GALERIA)
+      .safeParse(JSON.parse(json)).success;
+  } catch {
+    return false;
+  }
+}
 
 function esListaSellosValida(json: string) {
   try {

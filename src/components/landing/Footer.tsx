@@ -25,9 +25,9 @@ export default function Footer({ ajustes }: { ajustes: Ajustes }) {
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4">
         <div>
           <Image
-            src="/logo-titulo.png"
-            width={224}
-            height={224}
+            src="/logo.webp"
+            width={128}
+            height={128}
             alt={ajustes.nombreNegocio}
             className="h-28 w-28 object-contain"
           />

@@ -12,6 +12,8 @@ export default async function PaginaEditarProducto({
   const producto = await db.producto.findUnique({ where: { id } });
   if (!producto) notFound();
 
+  const ajustes = await db.ajustes.findUnique({ where: { id: "sitio" } });
+
   return (
     <div>
       <Link href="/admin/productos" className="text-sm text-tinta-suave hover:text-tinta">
@@ -21,7 +23,7 @@ export default async function PaginaEditarProducto({
         {producto.nombre}
       </h1>
       <div className="mt-6">
-        <FormProducto productoExistente={producto} />
+        <FormProducto productoExistente={producto} pedidoMinimo={ajustes?.pedidoMinimoKg} />
       </div>
     </div>
   );

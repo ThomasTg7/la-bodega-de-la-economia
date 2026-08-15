@@ -2,16 +2,16 @@ import type { Producto } from "@prisma/client";
 import TextoRevelado from "@/components/motion/TextoRevelado";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import TarjetaProducto from "./TarjetaProducto";
-import { PEDIDO_MINIMO_KG } from "@/lib/constantes";
-
 type Props = {
   productos: Producto[];
   /** Titulo y bajada de la seccion, editables desde el panel. */
   titulo: string;
   bajada: string;
+  /** Kilos minimos por pedido, del campo del panel. */
+  pedidoMinimo: number;
 };
 
-export default function Catalogo({ productos, titulo, bajada }: Props) {
+export default function Catalogo({ productos, titulo, bajada, pedidoMinimo }: Props) {
   return (
     <section
       id="catalogo"
@@ -51,7 +51,7 @@ export default function Catalogo({ productos, titulo, bajada }: Props) {
                 <path d="M20 10c0-4-3-7-8-7s-8 3-8 7" />
                 <path d="M3 10h18l-1.5 10.5a1.5 1.5 0 0 1-1.5 1.3H6a1.5 1.5 0 0 1-1.5-1.3Z" />
               </svg>
-              Pedido mínimo de {PEDIDO_MINIMO_KG} kg
+              Pedido mínimo de {pedidoMinimo} kg
             </p>
           </div>
         </SeccionEntrada>
@@ -61,7 +61,12 @@ export default function Catalogo({ productos, titulo, bajada }: Props) {
           style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
         >
           {productos.map((producto, i) => (
-            <TarjetaProducto key={producto.id} producto={producto} indice={i} />
+            <TarjetaProducto
+              key={producto.id}
+              producto={producto}
+              indice={i}
+              pedidoMinimo={pedidoMinimo}
+            />
           ))}
         </div>
 

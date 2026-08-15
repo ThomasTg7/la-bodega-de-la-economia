@@ -44,15 +44,18 @@ export default function PaginaPrincipal({ productos, ajustes }: Props) {
             sellos={parsearSellos(ajustes.portadaSellos)}
             mapaUrl={linkMapa(ajustes)}
           />
-          <FranjaAhorro />
+          {/* Horarios va pegado a la portada y la frase queda para más
+              abajo: intercambiadas respecto de como estaban. */}
+          <Cifras />
           <Catalogo
             productos={productos}
             titulo={ajustes.catalogoTitulo.trim() || CATALOGO_DEFECTO.titulo}
             bajada={ajustes.catalogoBajada.trim() || CATALOGO_DEFECTO.bajada}
+            pedidoMinimo={ajustes.pedidoMinimoKg}
           />
-          <Calculadora productos={productos} />
+          <Calculadora productos={productos} pedidoMinimo={ajustes.pedidoMinimoKg} />
           <QuienesSomos ajustes={ajustes} />
-          <Cifras />
+          <FranjaAhorro />
           <Pasos />
           <FormularioContacto />
         </main>

@@ -11,6 +11,7 @@ import { Icono } from "./Iconos";
 import { RESORTE_UI, useMovimientoReducido } from "@/lib/motion-config";
 import { parsearNumerosWhatsapp, type NumeroWhatsApp } from "@/lib/whatsapp";
 import { parsearSellos, SELLOS_DEFECTO } from "@/lib/portada";
+import { MAX_FOTOS_GALERIA, parsearGaleria } from "@/lib/galeria";
 
 type Datos = {
   nombreNegocio: string;
@@ -25,16 +26,11 @@ type Datos = {
   mapaUrl: string;
   catalogoTitulo: string;
   catalogoBajada: string;
+  /** Texto y no número: el input entrega string y dejar escribir "" mientras
+   *  se corrige el valor es más cómodo que forzar un 0 en el medio. Se
+   *  convierte al guardar. */
+  pedidoMinimoKg: string;
 };
-
-function parsearGaleria(json: string): string[] {
-  try {
-    const lista = JSON.parse(json);
-    return Array.isArray(lista) ? lista.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
 
 /** Lee la lista guardada sin caer al número único: acá vacío significa vacío. */
 function parsearNumerosGuardados(json: string): NumeroWhatsApp[] {
@@ -55,6 +51,7 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
     mapaUrl: inicial.mapaUrl,
     catalogoTitulo: inicial.catalogoTitulo,
     catalogoBajada: inicial.catalogoBajada,
+    pedidoMinimoKg: String(inicial.pedidoMinimoKg),
   };
 
   const [datos, setDatos] = useState<Datos>(datosIniciales);
@@ -97,6 +94,12 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
       return;
     }
 
+    const minimo = Number(datos.pedidoMinimoKg);
+    if (!Number.isInteger(minimo) || minimo < 1) {
+      mostrar("El pedido mínimo tiene que ser un número de kilos mayor que cero.", "error");
+      return;
+    }
+
     setGuardando(true);
     try {
       const resp = await fetch("/api/ajustes", {
@@ -104,6 +107,7 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...datos,
+          pedidoMinimoKg: minimo,
           // El campo antiguo sigue siendo el respaldo cuando no hay reparto.
           whatsapp: numeros[0]?.numero || datos.whatsapp,
           numerosWhatsapp: JSON.stringify(numeros),
@@ -125,20 +129,66 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
 
   function agregarFotos(archivos: FileList | null) {
     if (!archivos || archivos.length === 0) return;
+
+    // El corte va antes de subir: nada de gastar la subida de una foto que
+    // después no cabe. Si el usuario elige seis de una y ya hay cuatro, se
+    // suben las dos que entran y se le dice cuántas quedaron fuera.
+    const libres = MAX_FOTOS_GALERIA - galeria.length;
+    if (libres <= 0) {
+      mostrar(`El carrusel ya tiene ${MAX_FOTOS_GALERIA} fotos. Quita alguna primero.`, "error");
+      return;
+    }
+    const elegidos = Array.from(archivos);
+    const entran = elegidos.slice(0, libres);
+    if (elegidos.length > libres) {
+      mostrar(`Solo caben ${libres} más: se subirán las primeras ${libres}.`, "error");
+    }
+
     setSubiendo(true);
     Promise.all(
-      Array.from(archivos).map((archivo) => {
+      entran.map((archivo) => {
         const formData = new FormData();
         formData.append("archivo", archivo);
-        return fetch("/api/upload", { method: "POST", body: formData })
+        // `tipo=galeria`: son fotos del local, se miran de cerca y no llevan
+        // transparencia. El perfil del catálogo las dejaba más comprimidas.
+        return fetch("/api/upload?tipo=galeria", { method: "POST", body: formData })
           .then((r) => (r.ok ? r.json() : Promise.reject()))
           .then((d) => d.url as string)
           .catch(() => null);
       })
     ).then((urls) => {
-      setGaleria((prev) => [...prev, ...urls.filter((u): u is string => !!u)]);
+      const subidas = urls.filter((u): u is string => !!u);
+      if (subidas.length < entran.length) {
+        mostrar("Alguna foto no se pudo subir. Inténtalo de nuevo.", "error");
+      }
+      setGaleria((prev) => [...prev, ...subidas].slice(0, MAX_FOTOS_GALERIA));
       setSubiendo(false);
     });
+  }
+
+  /**
+   * Descarga la foto al computador. No alcanza con un <a download>: las que
+   * viven en Blob son de otro dominio y ahí el navegador ignora el atributo y
+   * se limita a abrir la imagen. Por eso se baja a memoria y se guarda desde
+   * una URL propia; si el fetch no pasa, se abre en otra pestaña, que es lo
+   * que habría hecho el <a> de todas formas.
+   */
+  async function descargarFoto(foto: string, idx: number) {
+    try {
+      const resp = await fetch(foto);
+      if (!resp.ok) throw new Error();
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `foto-local-${idx + 1}.${blob.type.split("/")[1] || "webp"}`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(foto, "_blank", "noopener,noreferrer");
+    }
   }
 
   function quitarFoto(idx: number) {
@@ -221,6 +271,13 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
               onChange={(v) => actualizar("catalogoBajada", v)}
               filas={3}
             />
+            <Campo
+              etiqueta="Pedido mínimo (kg)"
+              ayuda="Lo mínimo que se acepta por pedido. Sale en la etiqueta del catálogo, es donde parte la calculadora y va en el mensaje de WhatsApp. Siempre en kilos."
+              tipo="numero"
+              valor={datos.pedidoMinimoKg}
+              onChange={(v) => actualizar("pedidoMinimoKg", v)}
+            />
           </div>
         </TarjetaSeccion>
 
@@ -281,9 +338,14 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
 
         <TarjetaSeccion
           titulo="Fotos del local"
-          ayuda="Alimentan el carrusel de la sección Ubicación. Arrastra para reordenar."
+          ayuda={`Alimentan el carrusel de «Quiénes somos». Hasta ${MAX_FOTOS_GALERIA}; arrastra para reordenar.`}
           icono="imagen"
         >
+          <p className="mb-3 text-xs text-tinta-suave">
+            {galeria.length} de {MAX_FOTOS_GALERIA} fotos
+            {galeria.length === 0 && " — sin fotos propias se muestran las de fábrica"}
+          </p>
+
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {galeria.map((foto, i) => (
               <div
@@ -292,13 +354,16 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
                 onDragStart={() => setArrastrandoIdx(i)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => soltarEn(i)}
-                className="relative aspect-square cursor-grab overflow-hidden rounded-xl bg-cyan-100"
+                className="group relative aspect-square cursor-grab overflow-hidden rounded-xl bg-cyan-100"
               >
                 <Image src={foto} alt="" fill sizes="120px" className="object-cover" />
+
+                {/* Los dos botones viven en la esquina de arriba. En un
+                    teléfono no hay hover, así que se ven siempre. */}
                 <button
                   type="button"
                   onClick={() => quitarFoto(i)}
-                  aria-label="Quitar foto"
+                  aria-label={`Quitar la foto ${i + 1}`}
                   className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-tinta"
                 >
                   <svg
@@ -314,24 +379,55 @@ export default function PanelAjustes({ inicial }: { inicial: Ajustes }) {
                     <path d="M6 6l12 12M18 6L6 18" />
                   </svg>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => descargarFoto(foto, i)}
+                  aria-label={`Descargar la foto ${i + 1}`}
+                  className="absolute top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-tinta"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="13"
+                    height="13"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" />
+                  </svg>
+                </button>
               </div>
             ))}
 
-            <button
-              type="button"
-              onClick={() => inputArchivoRef.current?.click()}
-              className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-tinta/20 text-xs text-tinta-suave transition-colors hover:border-cyan-400"
-            >
-              <Icono nombre="subir" tam={18} />
-              {subiendo ? "Subiendo…" : "Agregar"}
-            </button>
+            {galeria.length < MAX_FOTOS_GALERIA && (
+              <button
+                type="button"
+                onClick={() => inputArchivoRef.current?.click()}
+                disabled={subiendo}
+                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-tinta/20 text-xs text-tinta-suave transition-colors hover:border-cyan-400 disabled:opacity-60"
+              >
+                <Icono nombre="subir" tam={18} />
+                {subiendo ? "Subiendo…" : "Agregar"}
+              </button>
+            )}
             <input
               ref={inputArchivoRef}
               type="file"
-              accept="image/*"
+              // Las extensiones van aparte de `image/*`: en Windows el .heic
+              // no está registrado como imagen y el selector lo escondería.
+              accept="image/*,.heic,.heif"
               multiple
               hidden
-              onChange={(e) => agregarFotos(e.target.files)}
+              onChange={(e) => {
+                agregarFotos(e.target.files);
+                // Sin esto, volver a elegir el mismo archivo no dispara el
+                // change y la subida no ocurre.
+                e.target.value = "";
+              }}
             />
           </div>
         </TarjetaSeccion>
@@ -371,21 +467,28 @@ function Campo({
   ayuda,
   valor,
   onChange,
+  tipo = "texto",
 }: {
   etiqueta: string;
   ayuda?: string;
   valor: string;
   onChange: (v: string) => void;
+  /** "numero" abre el teclado numérico en el teléfono y limita el ancho. */
+  tipo?: "texto" | "numero";
 }) {
+  const esNumero = tipo === "numero";
   return (
     <div>
       <label className="block text-sm font-semibold text-tinta">{etiqueta}</label>
       {ayuda && <p className="mt-0.5 text-xs text-tinta-suave">{ayuda}</p>}
       <input
-        type="text"
+        type={esNumero ? "number" : "text"}
+        {...(esNumero ? { min: 1, inputMode: "numeric" as const } : {})}
         value={valor}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none transition-colors focus:border-cyan-400"
+        className={`mt-1.5 rounded-xl border border-tinta/15 px-3 py-2.5 outline-none transition-colors focus:border-cyan-400 ${
+          esNumero ? "w-32" : "w-full"
+        }`}
       />
     </div>
   );
