@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:hosting": "TOKIO_WORKER_THREADS=2 UV_THREADPOOL_SIZE=2 VIPS_CONCURRENCY=1 next build",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",

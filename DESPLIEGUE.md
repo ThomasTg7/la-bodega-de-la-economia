@@ -84,7 +84,7 @@ source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/b
 npm install --include=dev   # ver abajo por qué el --include=dev
 npm run generate            # genera el cliente de Prisma
 npx prisma db push          # crea las tablas
-npm run build
+npm run build:hosting       # el :hosting no es opcional, ver abajo
 mkdir -p tmp && touch tmp/restart.txt   # Passenger recarga el proceso
 ```
 
@@ -192,9 +192,26 @@ git pull
 npm ci --include=dev
 npm run generate
 npx prisma db push
-npm run build
+npm run build:hosting
 touch tmp/restart.txt
 ```
+
+**Detén la aplicación antes de compilar** —cPanel → *Setup Node.js App* → *Stop*,
+no *Restart*— y arráncala después del `touch`. La cuenta tiene un techo de
+tareas (procesos e hilos cuentan juntos) y el proceso que sirve el sitio compite
+por él con el build. Con la app corriendo, el build muere a mitad de camino:
+
+    OS can't spawn worker thread: Resource temporarily unavailable (os error 11)
+
+Ese es el techo, no un error de Next. `ulimit -u` dice `unlimited` y engaña: el
+límite lo pone LVE, aparte, y no aparece ahí.
+
+El `build:hosting` es el mismo `next build` con tres variables que bajan los
+hilos que abre: `TOKIO_WORKER_THREADS` para el motor de Turbopack, que es Rust y
+levanta un hilo por núcleo aunque `cpus: 1` ya limite los workers de JavaScript;
+`UV_THREADPOOL_SIZE` para los de Node; y `VIPS_CONCURRENCY` para `sharp`, que
+procesa los iconos y la og-image. En local no hace falta: `npm run build` a
+secas es más rápido.
 
 `npx prisma db push` sincroniza el esquema con lo que diga
 `prisma/schema.prisma`. Si un cambio implicara **perder datos**, Prisma se
