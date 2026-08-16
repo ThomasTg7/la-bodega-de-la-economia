@@ -38,13 +38,16 @@ export const metadata: Metadata = {
     siteName: "La bodega de la economía",
     title: TITULO,
     description: DESCRIPCION,
-    images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
+    // El alto, el ancho, el tipo y el texto alternativo no se declaran acá:
+    // los pone Next leyendo el propio archivo src/app/opengraph-image.jpg y su
+    // opengraph-image.alt.txt, que tienen prioridad sobre este objeto.
+    images: [{ url: "/opengraph-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: TITULO,
     description: DESCRIPCION,
-    images: ["/twitter-image.png"],
+    images: ["/twitter-image.jpg"],
   },
   robots: {
     index: true,

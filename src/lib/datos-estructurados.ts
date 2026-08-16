@@ -45,7 +45,7 @@ function tiendaEstructurada(ajustes: Ajustes) {
     name: ajustes.nombreNegocio,
     description: ajustes.descripcion,
     url: SITIO_URL,
-    image: urlAbsoluta("/opengraph-image.png"),
+    image: urlAbsoluta("/opengraph-image.jpg"),
     telephone: ajustes.telefono1,
     priceRange: "$$",
     currenciesAccepted: "CLP",
