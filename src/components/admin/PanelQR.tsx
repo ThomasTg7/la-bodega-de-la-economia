@@ -82,6 +82,14 @@ async function dibujarQR(
     color: { dark: colorQR, light: fondo === "transparente" ? "#0000" : fondo },
   });
 
+  // qrcode escribe el tamaño en el style inline del canvas (720px, 4096px, el
+  // que sea). Eso le gana a cualquier clase, y la vista previa terminaba con
+  // 280px de ancho y 720 de alto: el QR estirado. El lienzo sigue teniendo su
+  // resolución —esa vive en los atributos width/height— y el tamaño en
+  // pantalla vuelve a decidirlo el CSS.
+  canvas.style.removeProperty("width");
+  canvas.style.removeProperty("height");
+
   if (!conLogo) return;
 
   const ctx = canvas.getContext("2d");
@@ -133,7 +141,17 @@ export default function PanelQR({ sitioUrl, linkWhatsApp, nombreNegocio }: Props
   const pobreContraste = fondo !== "transparente" && contraste(colorQR, fondo) < 4;
 
   const pintar = useCallback(async () => {
-    if (!vista.current || !contenido) return;
+    if (!vista.current) return;
+
+    // Sin contenido no hay QR que dibujar, pero el lienzo tiene que quedar
+    // limpio y cuadrado igual: si se deja con lo anterior, muestra un codigo
+    // que ya no corresponde a lo que dice el formulario.
+    if (!contenido) {
+      const ctx = vista.current.getContext("2d");
+      ctx?.clearRect(0, 0, vista.current.width, vista.current.height);
+      return;
+    }
+
     try {
       await dibujarQR(vista.current, {
         texto: contenido,
@@ -358,7 +376,17 @@ export default function PanelQR({ sitioUrl, linkWhatsApp, nombreNegocio }: Props
                 : "#FFFFFF",
           }}
         >
-          <canvas ref={vista} className="h-auto w-full max-w-[280px]" />
+          {/* Tres cosas para que nunca se vea estirado: los atributos width y
+              height dan el lienzo cuadrado desde el primer frame (sin ellos
+              mide 300x150 hasta que se dibuja); `h-auto` suelta el alto, que
+              en un canvas el atributo fija como si fuera CSS; y
+              `aspect-square` lo mantiene cuadrado al escalar. */}
+          <canvas
+            ref={vista}
+            width={720}
+            height={720}
+            className="aspect-square h-auto w-full max-w-[280px] rounded-lg"
+          />
         </div>
 
         <button
