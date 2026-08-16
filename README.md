@@ -173,7 +173,9 @@ Las fotos que sube el panel se guardan en `public/uploads/`, en el disco del
 servidor, y en la base queda la ruta relativa. Esa carpeta está en `.gitignore`,
 así que no viaja en el repo y sobrevive a cada `git pull`.
 
-Para publicar, ver [DESPLIEGUE.md](DESPLIEGUE.md).
+Cómo está montado el hosting y el primer despliegue, en
+[DESPLIEGUE.md](DESPLIEGUE.md). El paso a paso de subir cambios del día a día,
+en [SUBIR-A-PRODUCCION.md](SUBIR-A-PRODUCCION.md).
 
 ### Estructura del proyecto
 
