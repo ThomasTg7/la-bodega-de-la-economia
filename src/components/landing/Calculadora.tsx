@@ -99,7 +99,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
   return (
     <section
       id="calculadora"
-      className="relative overflow-hidden px-6 py-[72px] md:px-10"
+      className="relative overflow-hidden px-6 py-12 md:px-10 md:py-[52px]"
       style={{ background: "linear-gradient(120deg, #E6FAF5, #FFFFFF)" }}
     >
       <div
@@ -117,25 +117,25 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
         >
           <TextoRevelado texto="Calcula lo que te llevas" modo="palabra" as="span" />
         </h2>
-        <p className="mt-3 text-tinta-suave" style={{ fontSize: "var(--text-cuerpo)" }}>
+        <p className="mt-2.5 text-tinta-suave" style={{ fontSize: "var(--text-cuerpo)" }}>
           Elige la fruta, mueve los kilos y mira el precio. Al pasar los kilos marcados,
           el descuento por volumen se aplica solo.
         </p>
       </SeccionEntrada>
 
-      <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 items-center gap-10 md:grid-cols-[0.42fr_0.58fr] md:gap-8">
+      <div className="relative mx-auto mt-8 grid max-w-5xl grid-cols-1 items-center gap-6 md:mt-8 md:grid-cols-[0.42fr_0.58fr] md:gap-8">
         {/* Columna izquierda: la fruta */}
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative flex h-[180px] items-center justify-center md:h-[260px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative flex h-[145px] items-center justify-center md:h-[188px]">
             <motion.div
               aria-hidden="true"
               className="absolute rounded-full"
               animate={{ backgroundColor: producto.colorAcento }}
               transition={{ duration: 0.6 }}
               style={{
-                width: 260,
-                height: 260,
-                filter: "blur(50px)",
+                width: 215,
+                height: 215,
+                filter: "blur(45px)",
                 opacity: 0.25,
               }}
             />
@@ -156,7 +156,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
                     height={dim.h}
                     className="w-auto select-none"
                     style={{
-                      height: "clamp(150px, 24svh, 260px)",
+                      height: "clamp(122px, 19svh, 184px)",
                       filter: "var(--shadow-recorte)",
                     }}
                   />
@@ -233,7 +233,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
             </div>
           </div>
 
-          <div className="mt-8 rounded-2xl bg-white p-6 shadow-[var(--shadow-media)]">
+          <div className="mt-6 rounded-2xl bg-white p-5 shadow-[var(--shadow-media)]">
             <p className="text-sm text-tinta-suave">
               {kilos} kg · {producto.nombre}
             </p>
@@ -247,7 +247,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
                 <span className="text-tinta-suave">Total</span>
                 <span
                   className="font-titulo text-verde-700"
-                  style={{ fontSize: 44, fontVariantNumeric: "tabular-nums" }}
+                  style={{ fontSize: "clamp(34px, 4.4vw, 40px)", fontVariantNumeric: "tabular-nums" }}
                 >
                   {totalTexto}
                 </span>
@@ -330,7 +330,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
               type="button"
               onClick={manejarEncargo}
               disabled={bajoElMinimo}
-              className="mt-5 w-full rounded-full border-2 border-cyan-500 py-3 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-50 disabled:cursor-not-allowed disabled:border-tinta/15 disabled:text-tinta-suave disabled:hover:bg-transparent"
+              className="mt-4 w-full rounded-full border-2 border-cyan-500 py-3 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-50 disabled:cursor-not-allowed disabled:border-tinta/15 disabled:text-tinta-suave disabled:hover:bg-transparent"
             >
               {bajoElMinimo
                 ? `Sube a ${pedidoMinimo} kg para encargar`
