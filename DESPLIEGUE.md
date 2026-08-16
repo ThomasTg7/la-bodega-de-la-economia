@@ -1,20 +1,40 @@
-# Despliegue en Vercel
+# Despliegue en cPanel
 
-El sitio corre en Vercel con dos servicios detrás: **Neon** (Postgres) para los
-datos y **Vercel Blob** para las fotos que sube el panel. Ninguno de los dos es
-opcional: en Vercel el disco es de solo lectura y efímero, así que ni la base
-SQLite ni la carpeta `public/uploads` que se usaban en local sobreviven ahí.
+El sitio corre en un hosting cPanel con **MariaDB** para los datos y el disco
+del propio servidor para las fotos que sube el panel. No depende de ningún
+servicio externo: si el hosting está arriba, el sitio está arriba.
+
+Esto **no es un sitio estático ni WordPress**. Es Next.js con render en
+servidor, así que necesita un proceso Node corriendo permanentemente. En cPanel
+eso lo da **Setup Node.js App** (Phusion Passenger). Sin esa herramienta en el
+plan, el sitio no levanta.
+
+## Datos de la cuenta
+
+| Dato | Valor |
+|---|---|
+| Usuario cPanel | `cla118604` |
+| Directorio principal | `/home4/cla118604` (con el `4`) |
+| IP | `190.107.177.245` |
+| Dominio | `labodegadelaeconomia.cl` |
 
 ## Variables de entorno
 
 | Variable | De dónde sale |
 |---|---|
-| `DATABASE_URL` | la inyecta Neon al conectarla al proyecto |
-| `BLOB_READ_WRITE_TOKEN` | la inyecta la store de Blob al conectarla |
+| `DATABASE_URL` | la base que creas en cPanel → MySQL Databases |
 | `SESION_SECRETO` | se genera a mano (ver abajo) |
-| `ADMIN_EMAIL_INICIAL` | solo la usa el seed |
-| `ADMIN_PASS_INICIAL` | solo la usa el seed |
-| `NEXT_PUBLIC_SITIO_URL` | opcional — el dominio real para canonical/OG/sitemap. Sin ella cae a `https://labodegadelaeconomia.cl` |
+| `NEXT_PUBLIC_SITIO_URL` | opcional; sin ella cae a `https://labodegadelaeconomia.cl` |
+| `ADMIN_EMAIL_INICIAL` | solo la lee el seed |
+| `ADMIN_PASS_INICIAL` | solo la lee el seed |
+
+El `DATABASE_URL` va con prefijo `mysql://` aunque el motor sea MariaDB: hablan
+el mismo protocolo y el conector de Prisma es el mismo. El host es `127.0.0.1`
+porque la app corre en la misma máquina que la base.
+
+```
+DATABASE_URL="mysql://cla118604_bodega:CLAVE@127.0.0.1:3306/cla118604_bodega"
+```
 
 Generar el secreto de sesión:
 
@@ -22,155 +42,160 @@ Generar el secreto de sesión:
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Nunca reutilices el `SESION_SECRETO` del `.env` local en producción: con ese
-valor se firman las cookies del panel, y quien lo tenga puede fabricarse una
-sesión de admin.
+Nunca reutilices el `SESION_SECRETO` de local en producción: con ese valor se
+firman las cookies del panel, y quien lo tenga puede fabricarse una sesión de
+admin.
 
 ## Primer despliegue
 
-1. **Storage → Create Database → Neon.** Conéctala al proyecto; aparece
-   `DATABASE_URL` sola.
-2. **Storage → Create → Blob.** Conéctala; aparece `BLOB_READ_WRITE_TOKEN`.
-3. **Importar el repo** en vercel.com/new. Detecta Next.js solo.
-4. **Agregar las tres variables restantes** en Settings → Environment Variables.
-5. **Deploy.** El build corre `prisma db push && next build` (está fijado en
-   `vercel.json`), o sea que crea las tablas vacías.
-6. **Llenar la base**, una sola vez. Dos caminos según lo que quieras:
+**1. Crear la base.** cPanel → *MySQL Databases*: crea la base, crea el usuario
+y asígnalo con **ALL PRIVILEGES**. cPanel les antepone el prefijo de la cuenta,
+así que quedan con nombres tipo `cla118604_bodega`.
 
-   ```bash
-   npx vercel env pull .env.production.local
-   ```
-
-   - Traer lo que ya tenías en local (productos, ajustes y **las cuentas del
-     panel con su clave actual**):
-
-     ```bash
-     npm run migrar -- --aplicar
-     ```
-
-   - O empezar de cero con los productos y textos de fábrica:
-
-     ```bash
-     npx tsx --env-file=.env.production.local prisma/seed.ts
-     ```
-
-7. Si usaste el seed: entra al panel, cambia la clave y **borra
-   `ADMIN_PASS_INICIAL`** de las variables de Vercel. Si usaste `migrar`, entras
-   con tu clave de siempre y esas dos variables no hacen nada.
-
-## Elegir el motor de base de datos
-
-El proyecto corre sobre **PostgreSQL** (lo que usa hoy en Vercel, con Neon) o
-sobre **MariaDB / MySQL** (lo cómodo en un hosting compartido). Se elige con una
-variable de entorno:
+**2. Traer el código.** cPanel → *Terminal*:
 
 ```bash
-DB_PROVIDER=postgresql   # por defecto, si no la pones
-DB_PROVIDER=mariadb      # o "mysql", es lo mismo
+cd /home4/cla118604
+git clone https://github.com/ThomasTg7/la-bodega-de-la-economia.git bodega
 ```
 
-Con MariaDB el `DATABASE_URL` va con prefijo `mysql://` aunque el motor sea
-MariaDB — hablan el mismo protocolo y Prisma usa el mismo conector:
+**3. Crear la aplicación.** cPanel → *Setup Node.js App* → *Create Application*:
+
+| Campo | Valor |
+|---|---|
+| Node.js version | 22 o superior |
+| Application mode | Production |
+| Application root | `bodega` |
+| Application URL | `labodegadelaeconomia.cl` |
+| Application startup file | `server.js` |
+
+Y abajo, en *Environment variables*, las de la tabla de arriba.
+
+El orden importa: primero el `git clone`, después crear la aplicación. Así
+cPanel arma el entorno de Node sobre una carpeta que ya tiene el código.
+
+**4. Instalar y levantar.** De vuelta en la Terminal. El `source` de la primera
+línea lo muestra cPanel en la misma pantalla de *Setup Node.js App*; cámbialo si
+la versión de Node no es 22:
 
 ```bash
-DATABASE_URL="mysql://usuario:clave@127.0.0.1:3306/bodega"
+source /home4/cla118604/nodevenv/bodega/22/bin/activate
+cd /home4/cla118604/bodega
+npm install
+npx prisma db push          # crea las tablas
+npm run build
+touch tmp/restart.txt       # Passenger recarga el proceso
 ```
 
-**`DB_PROVIDER` tiene que estar puesta antes del `npm install`.** El cliente de
-Prisma queda atado al motor con el que se generó, y quien lo genera es el
-`postinstall`. Si el hosting ya instaló con el valor equivocado, basta con
-volver a correr `npm install` (o `node scripts/generar-cliente.mjs`) con la
-variable corregida.
+**5. Llenar la base**, una sola vez. Dos caminos:
 
-### Levantar la base en MariaDB
+- **Traer los datos que ya tenías** (productos, ajustes y las cuentas del panel
+  con su clave actual). Sube `datos-exportados.json` a la carpeta de la app por
+  el *File Manager* y:
+
+  ```bash
+  npm run importar                  # informe, no escribe nada
+  npm run importar -- --aplicar     # carga de verdad
+  ```
+
+- **O empezar de cero** con los productos y textos de fábrica:
+
+  ```bash
+  npx prisma db seed
+  ```
+
+Si usaste el seed: entra al panel, cambia la clave y **borra
+`ADMIN_PASS_INICIAL`** de las variables de entorno. Si usaste `importar`, entras
+con tu clave de siempre y esas dos variables no hacen nada.
+
+## Actualizar el sitio
+
+Cada vez que quieras publicar cambios, desde la Terminal de cPanel:
 
 ```bash
-npm run db:push:mariadb    # crea las tablas
-npm run db:seed:mariadb    # las llena con los datos de partida
-npm run db:studio:mariadb  # el visor de Prisma, si lo necesitas
+source /home4/cla118604/nodevenv/bodega/22/bin/activate
+cd /home4/cla118604/bodega
+git pull
+npm ci
+npx prisma db push
+npm run build
+touch tmp/restart.txt
 ```
 
-Los comandos sin sufijo (`npm run db:push`, `db:seed`, `db:studio`) siguen
-apuntando a Postgres.
+`npx prisma db push` sincroniza el esquema con lo que diga
+`prisma/schema.prisma`. Si un cambio implicara **perder datos**, Prisma se
+detiene y pide confirmación en vez de borrarlos: eso es a propósito, no le
+agregues `--accept-data-loss` sin mirar qué iba a borrar.
 
-### Por qué hay dos archivos de schema
+## Las fotos que sube el panel
 
-Prisma no acepta `provider = env("...")` en el bloque `datasource`: tiene que
-ser un literal. Soportar dos motores obliga entonces a dos archivos.
+Van al disco, en `public/uploads/`, y en la base se guarda la ruta relativa.
 
-Para que no se desincronicen, **solo se edita `prisma/schema.prisma`**. El de
-MariaDB se genera desde ese con `npm run schema:mariadb` (y se genera solo antes
-de cada comando `:mariadb`), cambiando una única línea: el provider. Está en el
-`.gitignore` justamente porque es un archivo derivado.
+Esa carpeta está en `.gitignore`, así que **`git pull` no la toca**: las fotos
+sobreviven a cada actualización. La contracara es que no están en el repo — si
+algún día hay que rearmar el hosting desde cero, hay que respaldarlas aparte
+(*File Manager* → comprimir `public/uploads` → descargar).
 
-Que la diferencia sea de una sola línea depende de los `@db.VarChar(n)` del
-schema base, que están puestos para servir a los dos motores a la vez:
-
-- En MySQL/MariaDB un `String` sin largo explícito es `varchar(191)`, donde no
-  entra el eslogan ni ninguno de los campos que guardan JSON.
-- Dejar esos campos como `TEXT` tampoco sirve: MySQL no permite `DEFAULT` en
-  columnas `TEXT`, y casi todas las nuestras tienen uno.
-- En Postgres, `varchar(n)` y `text` se comportan igual, así que anotar el largo
-  no cuesta nada de ese lado.
-
-Si agregas un campo de texto que pueda pasar de 191 caracteres, ponle su
-`@db.VarChar(n)`. Es la única regla que hay que recordar para que el schema siga
-sirviendo a los dos.
-
-### Lo que no viaja entre motores
-
-`prisma db push` crea el esquema, no copia los datos. Para pasar el contenido de
-una base a otra hay que exportarlo e importarlo aparte. Lo que sí es portable es
-el seed: `db:seed:mariadb` deja la base nueva con los productos y los ajustes de
-partida.
-
-## Desarrollo local
-
-El schema es Postgres, así que `prisma/dev.db` ya no se usa. La forma más
-simple de tener una base local sin instalar nada es una **branch de Neon**:
-
-1. En la consola de Neon: Branches → New Branch, a partir de `main`, nómbrala
-   `dev`.
-2. Copia su connection string a `DATABASE_URL` en tu `.env`.
-3. `npm run db:push` para crear las tablas, y `npm run db:seed` para llenarlas.
-
-Es gratis, es aislada de producción, y se puede resetear desde `main` cuando
-quieras datos frescos. La alternativa es instalar Postgres en la máquina; el
-schema no cambia en ningún caso.
-
-Para las fotos en local necesitas también el `BLOB_READ_WRITE_TOKEN`. Sale con
-`npx vercel env pull .env.local`. Ojo: **no hay Blob de desarrollo separado**,
-así que lo que subas probando en local queda en la misma store que producción.
-Para limpiarlo, `npm run limpiar` (ver abajo).
-
-## Deploys de preview
-
-Cada rama que pushees genera un deploy de preview. Por defecto **todos comparten
-la base y el Blob de producción**, y el build de cada uno corre `prisma db push`
-contra esa misma base.
-
-- **Base:** actívale a Neon la integración de branching con Vercel (en la
-  integración de Neon, "Create a branch for each preview deployment"). Cada
-  preview recibe su propia copia de la base y deja de tocar producción.
-- **Blob:** no tiene equivalente, la store es una sola. El riesgo es acotado
-  porque `/api/upload` exige sesión de admin y la cookie no viaja entre
-  dominios: para subir algo desde un preview hay que iniciar sesión ahí a
-  propósito.
-
-Si trabajas siempre directo sobre `main` y no abres ramas, esto no te afecta.
-
-## Mantenimiento
-
-`npm run limpiar` borra los mensajes del formulario más viejos que 90 días y las
-fotos del Blob que ya no usa ningún producto ni la galería. **No borra nada sin
-`--aplicar`**: sin esa bandera solo imprime el informe.
+Para borrar las que ya no usa ningún producto:
 
 ```bash
-npx vercel env pull .env.production.local
+npm run limpiar                   # informe
+npm run limpiar -- --aplicar      # borra de verdad
 ```
+
+Tiene que correrse **en el servidor**, no en local: las imágenes viven en el
+disco del hosting.
+
+## Desarrollo en local
+
+La base también es MariaDB en local. Con XAMPP ya viene incluida:
 
 ```bash
-npx tsx --env-file=.env.production.local scripts/limpiar-datos.ts
+C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE bodega CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-Revisa el informe y recién ahí repite el comando agregando `-- --aplicar`.
+Y en `.env`:
+
+```
+DATABASE_URL="mysql://root@127.0.0.1:3306/bodega"
+```
+
+Después `npx prisma db push` y `npm run dev`.
+
+## Recursos del plan
+
+Medido sobre la cuenta actual, para saber qué margen hay:
+
+| Recurso | Límite | Lo que usa el proyecto |
+|---|---|---|
+| Memoria física | 2 GB | ~1–1,5 GB durante `npm run build` |
+| Disco | 5 GB | ~1,2 GB (`node_modules` + `.next` + repo) |
+| Procesos | 150 | 1 |
+| Procesos entrantes | 8 | tope de visitas simultáneas |
+| Bases de datos | 2 | 1 |
+
+El número apretado es la memoria, y el límite es **para toda la cuenta**: el
+`npm run build` compite con el proceso Node que ya esté sirviendo. Si alguna vez
+lo mata por falta de memoria:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=1536 npm run build
+```
+
+Y si aun así no alcanza, la salida es compilar fuera del servidor (GitHub
+Actions) y subir solo el resultado.
+
+## Deploy automático con `git push`
+
+Lo de arriba es manual: tú corres los comandos. Para que un `git push` dispare
+el deploy solo hace falta **SSH habilitado en la cuenta**, que en este plan
+viene apagado y se pide por ticket al proveedor.
+
+Con SSH activo, cPanel → *Git™ Version Control* crea un repo al que se le puede
+hacer push, y si el proyecto trae un `.cpanel.yml` en la raíz, cPanel ejecuta el
+deploy al recibirlo. Los comandos del `.cpanel.yml` son exactamente los mismos
+de "Actualizar el sitio".
+
+Ojo con un malentendido común: cPanel **no vigila GitHub**. Un push a GitHub no
+dispara nada por sí solo. O le haces push directo a cPanel, o algo (GitHub
+Actions) le avisa.

@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // server.js es el archivo que carga Phusion Passenger en el hosting, y lo
+    // carga como CommonJS: el proyecto no declara "type": "module", así que un
+    // .js suelto es CJS. El require() de ahí no es un descuido, es la única
+    // forma que Passenger sabe leer.
+    files: ["server.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

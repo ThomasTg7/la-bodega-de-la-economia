@@ -2,8 +2,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// MariaDB. El provider se declara "mysql" y no "mariadb": hablan el mismo
+// protocolo y el conector de Prisma es el mismo, así que el literal correcto
+// es ese. El DATABASE_URL también va con prefijo mysql://.
+//
+// Los @db.VarChar repartidos por el schema no son decorativos: en MySQL y
+// MariaDB un String sin largo explícito es varchar(191), donde no entra ni el
+// eslogan ni ninguno de los campos que guardan JSON. Dejarlos como TEXT
+// tampoco sirve, porque MySQL no admite DEFAULT en columnas TEXT y casi todas
+// las nuestras tienen uno.
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 

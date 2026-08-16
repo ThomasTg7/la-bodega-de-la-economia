@@ -18,11 +18,8 @@
     "logo": "python scripts/preparar-logo.py",
     "galeria": "python scripts/preparar-galeria.py && tsx --env-file=.env scripts/galeria-carrusel.ts",
     "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts",
-    "migrar": "tsx --env-file=.env.production.local scripts/migrar-sqlite-a-postgres.ts",
-    "schema:mariadb": "node scripts/generar-schema-mariadb.mjs",
-    "db:push:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma db push --schema prisma/schema.mariadb.prisma",
-    "db:seed:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma db seed --schema prisma/schema.mariadb.prisma",
-    "db:studio:mariadb": "node scripts/generar-schema-mariadb.mjs && prisma studio --schema prisma/schema.mariadb.prisma",
+    "exportar": "tsx --env-file=.env scripts/exportar-datos.ts",
+    "importar": "tsx --env-file=.env scripts/importar-datos.ts",
     "textos": "tsx --env-file=.env scripts/actualizar-textos.ts"
   },
   "prisma": {
@@ -30,7 +27,6 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
-    "@vercel/blob": "^2.6.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "heic-convert": "^2.1.0",

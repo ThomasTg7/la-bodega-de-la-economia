@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
+import { mkdir, writeFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import path from "node:path";
 import sharp from "sharp";
 import { leerSesion } from "@/lib/sesion";
 
@@ -117,7 +119,6 @@ export async function POST(request: NextRequest) {
   // Todo sale en WebP, incluidos los recortes: soporta transparencia igual
   // que PNG y pesa una fracción. Un PNG de una fruta recortada a 1600px se
   // va fácil sobre 1 MB; el mismo WebP queda en decenas de KB.
-  const nombreArchivo = `${base}-${Date.now()}.webp`;
 
   let procesada: Buffer;
   let tieneAlfa = false;
@@ -157,27 +158,34 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // En Vercel el disco es de solo lectura, así que la imagen no puede quedar
-  // en /public: se sube a Blob y lo que se guarda en la base es la URL
-  // absoluta que devuelve. El sufijo aleatorio evita el error por nombre
-  // repetido si dos subidas caen en el mismo milisegundo.
-  let subida: Awaited<ReturnType<typeof put>>;
+  // La imagen queda en el disco del hosting, bajo public/uploads, y lo que se
+  // guarda en la base es la ruta relativa. Eso pide un disco que se pueda
+  // escribir y que sobreviva a un reinicio: en cPanel lo hay, y es la razón
+  // por la que esto ya no pasa por un almacenamiento externo.
+  //
+  // La carpeta va por destino para no mezclar las fotos del catálogo con las
+  // del local, igual que estaban separadas antes.
+  const carpeta = destino === "galeria" ? "local" : "productos";
+  // Sufijo aleatorio además del timestamp: dos subidas en el mismo
+  // milisegundo se pisarían, y acá pisar significa cambiarle la foto a otro
+  // producto sin aviso.
+  const nombreFinal = `${base}-${Date.now()}-${randomBytes(4).toString("hex")}.webp`;
+  const rutaPublica = `/uploads/${carpeta}/${nombreFinal}`;
+
   try {
-    subida = await put(`${destino === "galeria" ? "local" : "productos"}/${nombreArchivo}`, procesada, {
-      access: "public",
-      contentType: "image/webp",
-      addRandomSuffix: true,
-    });
+    const directorio = path.join(process.cwd(), "public", "uploads", carpeta);
+    await mkdir(directorio, { recursive: true });
+    await writeFile(path.join(directorio, nombreFinal), procesada);
   } catch {
     return NextResponse.json(
-      { error: "No se pudo guardar la imagen. Inténtalo de nuevo." },
-      { status: 502 }
+      { error: "No se pudo guardar la imagen en el servidor. Inténtalo de nuevo." },
+      { status: 500 }
     );
   }
 
   return NextResponse.json(
     {
-      url: subida.url,
+      url: rutaPublica,
       tieneAlfa,
       ancho,
       alto,

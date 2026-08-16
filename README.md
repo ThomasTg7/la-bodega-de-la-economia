@@ -148,7 +148,7 @@ El panel te muestra cuánto bajó cada foto al subirla. Los archivos que dejan d
 ### Variables de entorno (`.env`)
 
 ```
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="mysql://root@127.0.0.1:3306/bodega"
 SESION_SECRETO="una-clave-larga-y-secreta"
 ADMIN_EMAIL_INICIAL="correo-del-dueño"
 ADMIN_PASS_INICIAL="clave-temporal"
@@ -156,16 +156,24 @@ ADMIN_PASS_INICIAL="clave-temporal"
 
 `ADMIN_EMAIL_INICIAL` y `ADMIN_PASS_INICIAL` solo se usan la primera vez que se corre `db:seed`, para crear la cuenta inicial.
 
-### Migrar a Postgres para publicar en Vercel
+### La base es MariaDB, en local y en producción
 
-El sitio usa SQLite (un archivo local) porque es lo más simple para desarrollar y correr en un solo servidor. Para publicar en Vercel:
+El mismo motor en los dos lados, para que nada se descubra recién al publicar.
+En local sale de XAMPP, que ya trae MariaDB:
 
-1. En `prisma/schema.prisma`, cambia `provider = "sqlite"` por `provider = "postgresql"`.
-2. Crea una base de datos en [Neon](https://neon.tech) o [Supabase](https://supabase.com) y apunta `DATABASE_URL` a esa base.
-3. Corre `npx prisma migrate deploy`.
-4. Reemplaza el guardado en `public/uploads/` de `src/app/api/upload/route.ts` por [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) o Supabase Storage — el sistema de archivos de Vercel es de solo lectura en producción, así que no se pueden guardar imágenes subidas directamente en disco.
+```bash
+C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE bodega CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+npx prisma db push
+```
 
-El resto del sitio (productos, precios, textos, WhatsApp) funciona igual sin cambios adicionales.
+El `DATABASE_URL` va con prefijo `mysql://` aunque el motor sea MariaDB: hablan
+el mismo protocolo y el conector de Prisma es el mismo.
+
+Las fotos que sube el panel se guardan en `public/uploads/`, en el disco del
+servidor, y en la base queda la ruta relativa. Esa carpeta está en `.gitignore`,
+así que no viaja en el repo y sobrevive a cada `git pull`.
+
+Para publicar, ver [DESPLIEGUE.md](DESPLIEGUE.md).
 
 ### Estructura del proyecto
 

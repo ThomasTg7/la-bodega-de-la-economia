@@ -14,10 +14,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Solo WebP y no tambien AVIF: codificar AVIF es caro en CPU y duplica
-    // lo que el optimizador guarda en cache (una copia por formato). En
-    // Vercel no pesa, pero el sitio va a mudarse a un hosting propio que
-    // capaz no sea tan holgado — si termina siendo un servidor con CPU de
-    // sobra, agregar "image/avif" primero en esta lista es todo el cambio.
+    // lo que el optimizador guarda en cache (una copia por formato), y el
+    // hosting comparte 2 GB de memoria y 5 GB de disco entre todo. Si algun
+    // dia sobra maquina, agregar "image/avif" primero en esta lista es todo
+    // el cambio.
     formats: ["image/webp"],
     // Next 16 exige declarar que calidades se permiten optimizar. El sitio
     // solo pide 75 (el default de `next/image`), asi que es la unica.
@@ -26,22 +26,15 @@ const nextConfig: NextConfig = {
     // nombre (ver el comentario de mas abajo sobre los estaticos de
     // /public), asi que el cache del optimizador puede vivir tranquilo.
     minimumCacheTTL: 31536000,
-    // Las fotos que sube el panel viven en Vercel Blob, no en /public. El
-    // subdominio lleva el id del store, que cambia entre entornos, así que se
-    // deja el comodín en esa parte y se cierra el resto del patrón.
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**.public.blob.vercel-storage.com",
-        pathname: "/**",
-      },
-    ],
+    // Sin remotePatterns: todas las imágenes son locales. Las que sube el
+    // panel quedan en public/uploads del propio hosting, así que entran por
+    // ruta relativa igual que las que vienen con el sitio.
   },
   async headers() {
     // Cache inmutable para los estaticos que ya vienen versionados a mano
     // por los scripts de scripts/ (preparar-imagenes.py, preparar-logo.py,
-    // etc). Va aca y no en vercel.json para que sobreviva la mudanza a otro
-    // hosting: esto lo aplica el propio servidor de Next.
+    // etc). Va aca y no en la configuracion del hosting para que lo aplique
+    // el propio servidor de Next, sin depender de donde corra.
     //
     // Con esto puesto, reemplazar una de estas fotos tiene que ser con un
     // nombre de archivo nuevo, no sobrescribiendo el mismo: un navegador que
