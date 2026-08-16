@@ -37,6 +37,21 @@ const nextConfig: NextConfig = {
   // codigo, solo lo que termina en el bundle.
   experimental: {
     optimizePackageImports: ["motion"],
+    // El build en cPanel moria despues de compilar, al generar las paginas
+    // estaticas:
+    //
+    //   spawn /opt/alt/alt-nodejs24/root/usr/bin/node EAGAIN
+    //
+    // Next reparte esa etapa en procesos hijos (jest-worker sobre
+    // child_process) y el hosting no deja hacer el fork. EAGAIN es el kernel
+    // negando el proceso nuevo, no un error de Next, asi que reintentar o
+    // darle mas memoria no cambia nada.
+    //
+    // Con workerThreads los mismos workers corren como hilos del proceso que
+    // ya existe: no hay fork que negar. Y con uno solo alcanza, el sitio
+    // tiene ~15 paginas estaticas.
+    workerThreads: true,
+    cpus: 1,
   },
   images: {
     // Solo WebP y no tambien AVIF: codificar AVIF es caro en CPU y duplica
