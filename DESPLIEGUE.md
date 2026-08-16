@@ -63,7 +63,7 @@ git clone https://github.com/ThomasTg7/la-bodega-de-la-economia.git bodega
 
 | Campo | Valor |
 |---|---|
-| Node.js version | 22 o superior |
+| Node.js version | 24 (el que quedó instalado; sirve cualquiera >= 20.9) |
 | Application mode | Production |
 | Application root | `bodega` |
 | Application URL | `labodegadelaeconomia.cl` |
@@ -79,13 +79,23 @@ línea lo muestra cPanel en la misma pantalla de *Setup Node.js App*; cámbialo 
 la versión de Node no es 22:
 
 ```bash
-source /home4/cla118604/nodevenv/bodega/22/bin/activate
-cd /home4/cla118604/bodega
+source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/bodega
 npm install
+npm run generate            # genera el cliente de Prisma
 npx prisma db push          # crea las tablas
 npm run build
 touch tmp/restart.txt       # Passenger recarga el proceso
 ```
+
+El `npm run generate` va en su propio paso y no en un `postinstall` a propósito.
+El Node.js Selector de cPanel guarda `node_modules` fuera de la carpeta de la
+app —en `nodevenv/bodega/24/lib/`— y deja un enlace simbólico en su lugar. Con
+eso, npm corre los scripts de ciclo de vida parado en la carpeta equivocada y
+un `postinstall` falla con `Cannot find module`. Ejecutarlo aparte, ya dentro
+del directorio correcto, lo evita.
+
+El `&&` de la primera línea junta la activación con el `cd`: si se corren
+sueltas y la sesión se corta, se termina trabajando desde el home sin notarlo.
 
 **5. Llenar la base**, una sola vez. Dos caminos:
 
@@ -113,10 +123,10 @@ con tu clave de siempre y esas dos variables no hacen nada.
 Cada vez que quieras publicar cambios, desde la Terminal de cPanel:
 
 ```bash
-source /home4/cla118604/nodevenv/bodega/22/bin/activate
-cd /home4/cla118604/bodega
+source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/bodega
 git pull
 npm ci
+npm run generate
 npx prisma db push
 npm run build
 touch tmp/restart.txt

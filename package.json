@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "node scripts/generar-cliente.mjs",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
@@ -20,7 +19,8 @@
     "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts",
     "exportar": "tsx --env-file=.env scripts/exportar-datos.ts",
     "importar": "tsx --env-file=.env scripts/importar-datos.ts",
-    "textos": "tsx --env-file=.env scripts/actualizar-textos.ts"
+    "textos": "tsx --env-file=.env scripts/actualizar-textos.ts",
+    "generate": "prisma generate"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
