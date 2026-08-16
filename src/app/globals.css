@@ -55,7 +55,14 @@
   --shadow-suave: 0 2px 8px rgba(11, 43, 34, 0.06), 0 8px 24px rgba(11, 43, 34, 0.06);
   --shadow-media: 0 4px 16px rgba(11, 43, 34, 0.08), 0 16px 48px rgba(11, 43, 34, 0.1);
   --shadow-flotante: 0 24px 64px rgba(11, 43, 34, 0.18), 0 8px 20px rgba(11, 43, 34, 0.1);
-  --shadow-recorte: drop-shadow(0 24px 28px rgba(11, 43, 34, 0.28));
+  /* Sombra de la fruta recortada. Va corta y suave a propósito: un
+     drop-shadow con 24px de desplazamiento y 28 de difuminado se sale muy
+     lejos de la silueta, y cuando un ancestro tiene su propio filtro —el
+     recorte de la calculadora vive dentro de uno— el navegador recorta la
+     zona del filtro contra la caja del elemento y esa sombra suelta se ve
+     como un cuadrado gris. La sensación de que flota la da la sombra de
+     contacto de ObjetoFlotante, no esta. */
+  --shadow-recorte: drop-shadow(0 10px 12px rgba(11, 43, 34, 0.2));
 
   /* Curvas de easing */
   --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);

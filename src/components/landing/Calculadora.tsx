@@ -142,9 +142,13 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={producto.slug}
-                initial={{ scale: 0.8, opacity: 0, rotate: 18, filter: "blur(8px)" }}
-                animate={{ scale: 1, opacity: 1, rotate: 0, filter: "blur(0px)" }}
-                exit={{ scale: 0.8, opacity: 0, rotate: -18, filter: "blur(8px)" }}
+                // Sin blur en la transición: animar un filtro obliga al
+                // navegador a rasterizar el subárbol, y la sombra del recorte
+                // —que vive dentro— quedaba recortada contra la caja, con el
+                // cuadrado gris que se veía al cambiar de fruta.
+                initial={{ scale: 0.8, opacity: 0, rotate: 18 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0.8, opacity: 0, rotate: -18 }}
                 transition={{ duration: 0.45, ease: EASE_REBOTE }}
                 className="relative"
               >

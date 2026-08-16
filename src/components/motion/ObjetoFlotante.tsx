@@ -56,12 +56,12 @@ export default function ObjetoFlotante({
             position: "absolute",
             left: "50%",
             bottom: "-4%",
-            width: "68%",
-            height: "14%",
+            width: "72%",
+            height: "15%",
             transform: "translateX(-50%)",
             borderRadius: "999px",
-            background: "radial-gradient(ellipse, rgba(11,43,34,.30), transparent 72%)",
-            filter: "blur(3px)",
+            background: "radial-gradient(ellipse, rgba(11,43,34,.34), transparent 72%)",
+            filter: "blur(4px)",
             pointerEvents: "none",
           }}
         />
