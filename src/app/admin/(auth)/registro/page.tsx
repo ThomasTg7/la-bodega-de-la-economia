@@ -7,7 +7,9 @@ import Link from "next/link";
 export default function PaginaRegistro() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [nombre, setNombre] = useState("");
+  const [palabraClave, setPalabraClave] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -20,7 +22,7 @@ export default function PaginaRegistro() {
       const resp = await fetch("/api/auth/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, nombre, clave }),
+        body: JSON.stringify({ email, usuario, nombre, clave, palabraClave }),
       });
       if (!resp.ok) {
         const datos = await resp.json().catch(() => ({}));
@@ -42,7 +44,7 @@ export default function PaginaRegistro() {
         Crear tu cuenta
       </h1>
       <p className="mt-2 text-center text-sm text-tinta-suave">
-        Usa el mismo correo que te invitaron a agregar.
+        Necesitas la palabra clave del sitio. Pídesela a quien lo administra.
       </p>
       <form onSubmit={manejarEnvio} className="mt-6 space-y-4">
         <div>
@@ -58,6 +60,25 @@ export default function PaginaRegistro() {
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none focus:border-cyan-400"
           />
+        </div>
+        <div>
+          <label htmlFor="reg-usuario" className="block text-sm font-semibold text-tinta">
+            Usuario
+          </label>
+          <input
+            id="reg-usuario"
+            type="text"
+            required
+            minLength={3}
+            maxLength={30}
+            autoComplete="username"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none focus:border-cyan-400"
+          />
+          <p className="mt-1 text-xs text-tinta-suave">
+            Con esto entras después, sin escribir el correo. Sin espacios.
+          </p>
         </div>
         <div>
           <label htmlFor="reg-nombre" className="block text-sm font-semibold text-tinta">
@@ -88,6 +109,22 @@ export default function PaginaRegistro() {
             className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none focus:border-cyan-400"
           />
           <p className="mt-1 text-xs text-tinta-suave">Mínimo 8 caracteres.</p>
+        </div>
+        <div>
+          <label htmlFor="reg-palabra" className="block text-sm font-semibold text-tinta">
+            Palabra clave del sitio
+          </label>
+          <input
+            id="reg-palabra"
+            type="password"
+            autoComplete="off"
+            value={palabraClave}
+            onChange={(e) => setPalabraClave(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none focus:border-cyan-400"
+          />
+          <p className="mt-1 text-xs text-tinta-suave">
+            No es tu clave: es la palabra que habilita crear cuentas.
+          </p>
         </div>
 
         {error && (

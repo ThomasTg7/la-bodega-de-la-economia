@@ -24,6 +24,7 @@ plan, el sitio no levanta.
 |---|---|
 | `DATABASE_URL` | la base que creas en cPanel → MySQL Databases |
 | `SESION_SECRETO` | se genera a mano (ver abajo) |
+| `CLAVE_REGISTRO` | la eliges tú; habilita crear cuentas en /admin/registro |
 | `NEXT_PUBLIC_SITIO_URL` | opcional; sin ella cae a `https://labodegadelaeconomia.cl` |
 | `ADMIN_EMAIL_INICIAL` | solo la lee el seed |
 | `ADMIN_PASS_INICIAL` | solo la lee el seed |
@@ -139,6 +140,47 @@ sueltas y la sesión se corta, se termina trabajando desde el home sin notarlo.
 Si usaste el seed: entra al panel, cambia la clave y **borra
 `ADMIN_PASS_INICIAL`** de las variables de entorno. Si usaste `importar`, entras
 con tu clave de siempre y esas dos variables no hacen nada.
+
+## Cuentas del panel
+
+Se entra en `/admin/login` con **nombre de usuario o correo**, indistintamente.
+El campo es uno solo y acepta las dos cosas; las mayúsculas dan igual, porque el
+cotejo de la base es `utf8mb4_unicode_ci`.
+
+Para crear una cuenta hay dos caminos, y basta con uno:
+
+- **La palabra clave compartida.** Quien la sepa entra a `/admin/registro`, la
+  escribe y se crea la cuenta solo. Es el valor de `CLAVE_REGISTRO` en las
+  variables de entorno. Se la pasas por WhatsApp a quien corresponda y listo.
+- **La lista de Accesos del panel.** Si agregas un correo ahí, esa persona puede
+  registrarse sin saber la palabra clave.
+
+Si `CLAVE_REGISTRO` no está definida, el primer camino queda **cerrado**, no
+abierto: olvidar la variable no puede dejar el registro a merced de cualquiera
+que llegue a la URL. Para cambiar quién puede entrar, cambia la palabra: las
+cuentas ya creadas siguen funcionando.
+
+### Cuando nadie puede entrar
+
+No hay recuperación de clave por correo —el sitio no manda mails—, así que la
+salida es la terminal. Crea o repón la cuenta:
+
+```bash
+source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/bodega
+npm run usuario -- --usuario DonCarlos --email don@ejemplo.cl --nombre "Don Carlos"
+```
+
+Eso es un informe y no escribe nada. Para aplicarlo hay que pasarle la clave por
+la entrada estándar, nunca como argumento: un `--clave` quedaría en
+`~/.bash_history` y a la vista de cualquier `ps` mientras corre.
+
+```bash
+read -rsp "Clave: " CLAVE && echo
+printf '%s' "$CLAVE" | npm run usuario -- --usuario DonCarlos --email don@ejemplo.cl --nombre "Don Carlos" --aplicar
+```
+
+Si el correo o el usuario ya existen, actualiza esa cuenta en vez de crear otra
+— que es justamente cómo se repone una clave olvidada.
 
 ## Actualizar el sitio
 

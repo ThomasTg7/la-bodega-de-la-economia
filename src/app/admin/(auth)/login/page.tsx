@@ -7,7 +7,7 @@ import Link from "next/link";
 function FormularioLogin() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [identificador, setIdentificador] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -20,7 +20,7 @@ function FormularioLogin() {
       const resp = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, clave }),
+        body: JSON.stringify({ identificador, clave }),
       });
       if (!resp.ok) {
         const datos = await resp.json().catch(() => ({}));
@@ -43,16 +43,16 @@ function FormularioLogin() {
       </h1>
       <form onSubmit={manejarEnvio} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="login-email" className="block text-sm font-semibold text-tinta">
-            Correo
+          <label htmlFor="login-usuario" className="block text-sm font-semibold text-tinta">
+            Usuario o correo
           </label>
           <input
-            id="login-email"
-            type="email"
+            id="login-usuario"
+            type="text"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            value={identificador}
+            onChange={(e) => setIdentificador(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-tinta/15 px-3 py-2.5 outline-none focus:border-cyan-400"
           />
         </div>
@@ -86,7 +86,7 @@ function FormularioLogin() {
         </button>
       </form>
       <p className="mt-5 text-center text-sm text-tinta-suave">
-        ¿Te invitaron?{" "}
+        ¿No tienes cuenta?{" "}
         <Link href="/admin/registro" className="font-semibold text-cyan-700">
           Crea tu cuenta
         </Link>

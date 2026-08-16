@@ -55,6 +55,12 @@ model Producto {
 model Usuario {
   id           String    @id @default(cuid())
   email        String    @unique
+  /// Nombre de usuario, para entrar sin escribir el correo. Nullable a
+  /// proposito: las cuentas que existian antes de este campo siguen entrando
+  /// por correo, y MySQL admite varios NULL bajo un mismo indice unico. El
+  /// cotejo de la base es utf8mb4_unicode_ci, asi que "doncarlos" y
+  /// "DonCarlos" son el mismo usuario al buscar y al comprobar duplicados.
+  usuario      String?   @unique
   nombre       String    @default("")
   hashClave    String
   rol          String    @default("admin") // admin | editor

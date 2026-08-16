@@ -2,15 +2,31 @@ import { z } from "zod";
 
 import { MAX_FOTOS_GALERIA } from "./galeria";
 
+/** Nombre de usuario: sin espacios ni arroba, para no confundirlo con un correo. */
+export const NOMBRE_USUARIO = z
+  .string()
+  .trim()
+  .min(3)
+  .max(30)
+  .regex(/^[a-zA-Z0-9._-]+$/, "Solo letras, números, punto, guion y guion bajo");
+
 export const esquemaLogin = z.object({
-  email: z.string().trim().toLowerCase().email(),
+  // Un solo campo para las dos formas de entrar. No se valida como correo ni
+  // se pasa a minúsculas: puede ser un nombre de usuario, y el cotejo de la
+  // base ya es insensible a mayúsculas.
+  identificador: z.string().trim().min(1).max(120),
   clave: z.string().min(1),
 });
 
 export const esquemaRegistro = z.object({
   email: z.string().trim().toLowerCase().email(),
+  usuario: NOMBRE_USUARIO,
   nombre: z.string().trim().min(2).max(60),
   clave: z.string().min(8).max(72),
+  // La palabra clave compartida que habilita el registro. Vacía se acepta en
+  // el esquema y la rechaza la ruta: así el mensaje de error distingue entre
+  // "te faltan datos" y "esa palabra clave no es".
+  palabraClave: z.string().max(200).default(""),
 });
 
 export const esquemaProducto = z.object({

@@ -19,6 +19,7 @@
     "limpiar": "tsx --env-file=.env scripts/limpiar-datos.ts",
     "exportar": "tsx --env-file=.env scripts/exportar-datos.ts",
     "importar": "tsx --env-file=.env scripts/importar-datos.ts",
+    "usuario": "tsx --env-file=.env scripts/crear-usuario.ts",
     "textos": "tsx --env-file=.env scripts/actualizar-textos.ts",
     "generate": "prisma generate"
   },

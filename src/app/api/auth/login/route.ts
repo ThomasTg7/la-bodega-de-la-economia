@@ -11,8 +11,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
   }
 
-  const mensajeGenerico = "Correo o clave incorrectos.";
-  const usuario = await db.usuario.findUnique({ where: { email: datos.data.email } });
+  const mensajeGenerico = "Usuario o clave incorrectos.";
+  const { identificador } = datos.data;
+
+  // Se busca por los dos campos en vez de adivinar cuál es por la arroba: un
+  // nombre de usuario no puede llevarla (lo impide el esquema), así que las
+  // dos condiciones nunca compiten por la misma fila. El cotejo de MariaDB es
+  // utf8mb4_unicode_ci, de modo que "DonCarlos" entra escribiendo "doncarlos".
+  const usuario = await db.usuario.findFirst({
+    where: { OR: [{ email: identificador }, { usuario: identificador }] },
+  });
   if (!usuario) {
     return NextResponse.json({ error: mensajeGenerico }, { status: 401 });
   }
