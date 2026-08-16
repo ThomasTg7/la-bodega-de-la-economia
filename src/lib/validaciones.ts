@@ -29,6 +29,26 @@ export const esquemaRegistro = z.object({
   palabraClave: z.string().max(200).default(""),
 });
 
+/** Cambio de clave propio, desde el panel. */
+export const esquemaCambioClave = z.object({
+  // La actual se pide entera aunque solo se compare contra el hash: es lo que
+  // evita que un computador con la sesión abierta se quede con la cuenta.
+  claveActual: z.string().min(1).max(72),
+  claveNueva: z.string().min(8).max(72),
+});
+
+/**
+ * Alta de usuario hecha desde adentro del panel. Mismos campos que el
+ * registro público pero sin palabra clave: acá la autorización es la sesión
+ * de quien lo crea.
+ */
+export const esquemaUsuarioNuevo = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  usuario: NOMBRE_USUARIO,
+  nombre: z.string().trim().min(2).max(60),
+  clave: z.string().min(8).max(72),
+});
+
 export const esquemaProducto = z.object({
   nombre: z.string().trim().min(2).max(60),
   slug: z

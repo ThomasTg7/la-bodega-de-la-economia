@@ -144,6 +144,15 @@ export default function NavFlotante() {
             ))}
           </div>
 
+          {/* Entrada al panel. Enlace normal y no <Link>: /admin está detrás de
+              la sesión, así que prefetcharlo solo traería el redirect al login. */}
+          <a
+            href="/admin"
+            className="ml-1 hidden shrink-0 items-center rounded-full bg-verde-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-verde-500 md:inline-flex"
+          >
+            IntraNet
+          </a>
+
           <button
             type="button"
             onClick={() => setMenuAbierto(true)}
@@ -199,6 +208,18 @@ export default function NavFlotante() {
                   {enlace.label}
                 </motion.a>
               ))}
+
+              <motion.a
+                href="/admin"
+                onClick={() => setMenuAbierto(false)}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: ENLACES.length * 0.06 }}
+                className="mt-3 rounded-full bg-verde-600 px-9 py-3.5 font-titulo text-white"
+                style={{ fontSize: 22 }}
+              >
+                IntraNet
+              </motion.a>
             </nav>
           </motion.div>
         )}
