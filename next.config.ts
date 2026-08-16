@@ -1,9 +1,35 @@
 import type { NextConfig } from "next";
+import fs from "node:fs";
 import path from "node:path";
+
+/**
+ * Turbopack no resuelve nada que quede fuera de su raiz, y en cPanel eso
+ * rompe el build: el Node.js Selector guarda node_modules en
+ * nodevenv/<app>/<version>/lib/ y deja un enlace simbolico en la carpeta de
+ * la app. Con la raiz apuntando al proyecto, el build muere con "Symlink
+ * [project]/node_modules is invalid, it points out of the filesystem root".
+ *
+ * Cuando el enlace sale del proyecto, la raiz sube un nivel: ahi caen dentro
+ * tanto la app como el nodevenv. En local node_modules es una carpeta de
+ * verdad, la condicion no se cumple y la raiz sigue siendo el proyecto, que
+ * es lo que conviene: ampliarla agranda lo que Turbopack vigila.
+ */
+function raizTurbopack() {
+  try {
+    const real = fs.realpathSync(path.join(__dirname, "node_modules"));
+    if (path.relative(__dirname, real).startsWith("..")) {
+      return path.join(__dirname, "..");
+    }
+  } catch {
+    // Todavia no hay node_modules (un `next` corrido antes del install). La
+    // raiz del proyecto es la respuesta correcta igual.
+  }
+  return __dirname;
+}
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: path.join(__dirname),
+    root: raizTurbopack(),
   },
   // "motion" no viene en la lista de paquetes optimizados por defecto de
   // Next: sin esto, un `import { motion } from "motion/react"` puede traer
