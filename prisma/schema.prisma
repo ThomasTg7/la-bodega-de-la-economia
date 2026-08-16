@@ -79,15 +79,24 @@ model Usuario {
   ultimoAcceso DateTime?
 }
 
-/// Correos autorizados a crearse una cuenta en /admin/registro.
-model CorreoAutorizado {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  nota        String    @default("")
-  usado       Boolean   @default(false)
-  invitadoPor String    @default("")
-  creadoEn    DateTime  @default(now())
-  usadoEn     DateTime?
+/// Invitacion para crearse una cuenta en /admin/registro: un link de un solo
+/// uso que vence a los 30 minutos (MINUTOS_VIGENCIA en src/lib/invitaciones.ts).
+///
+/// Reemplaza a la lista de correos autorizados y a la palabra clave
+/// compartida, que no caducaban: quien alguna vez supo la palabra podia
+/// crearse una cuenta meses despues.
+model Invitacion {
+  id String @id @default(cuid())
+  /// sha256 del token que viaja en el link, nunca el token. Un volcado de la
+  /// base no alcanza para fabricarse una cuenta.
+  hashToken String    @unique
+  nota      String    @default("")
+  creadaPor String    @default("")
+  creadaEn  DateTime  @default(now())
+  expiraEn  DateTime
+  /// Con fecha = ya se creo la cuenta con este link y no sirve de nuevo.
+  usadaEn  DateTime?
+  usadaPor String    @default("")
 }
 
 model Mensaje {

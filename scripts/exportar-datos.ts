@@ -23,11 +23,10 @@ const db = new PrismaClient();
 const SALIDA = path.join(process.cwd(), "datos-exportados.json");
 
 async function main() {
-  const [productos, ajustes, usuarios, correosAutorizados, mensajes] = await Promise.all([
+  const [productos, ajustes, usuarios, mensajes] = await Promise.all([
     db.producto.findMany({ orderBy: { orden: "asc" } }),
     db.ajustes.findUnique({ where: { id: "sitio" } }),
     db.usuario.findMany(),
-    db.correoAutorizado.findMany(),
     db.mensaje.findMany(),
   ]);
 
@@ -36,7 +35,6 @@ async function main() {
     productos,
     ajustes,
     usuarios,
-    correosAutorizados,
     mensajes,
   };
 
@@ -46,7 +44,6 @@ async function main() {
   console.log(`  productos            ${productos.length}`);
   console.log(`  ajustes              ${ajustes ? 1 : 0}`);
   console.log(`  usuarios             ${usuarios.length}  (con su hash de clave)`);
-  console.log(`  correos autorizados  ${correosAutorizados.length}`);
   console.log(`  mensajes             ${mensajes.length}`);
   console.log(
     "\nGuárdalo hasta confirmar que MariaDB quedó con todo: es la única copia de las cuentas del panel."

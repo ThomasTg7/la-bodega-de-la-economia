@@ -130,6 +130,18 @@ Eso borra datos de verdad. Corta ahí y revisa qué cambió en el esquema. Esta
 advertencia aceptada por error es lo que una vez dejó la base vacía y hubo que
 recargarla entera.
 
+**La excepción, una sola vez:** el cambio que reemplazó las invitaciones por
+correo con los links de un solo uso elimina la tabla `CorreoAutorizado`. Esa
+tabla guardaba a quién se había invitado, nada más — **las cuentas del panel
+viven en `Usuario` y no se tocan**. Ahí sí corresponde:
+
+```bash
+npx prisma db push --accept-data-loss
+```
+
+Compruébalo antes de darle Enter: el aviso tiene que hablar de
+`correoautorizado` y de ninguna otra tabla.
+
 Para ver cómo quedó:
 
 ```bash

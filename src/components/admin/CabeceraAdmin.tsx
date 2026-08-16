@@ -9,7 +9,7 @@ const TITULOS: { prefijo: string; titulo: string; exacto?: boolean }[] = [
   { prefijo: "/admin/productos/nuevo", titulo: "Nuevo producto" },
   { prefijo: "/admin/productos", titulo: "Productos" },
   { prefijo: "/admin/mensajes", titulo: "Mensajes" },
-  { prefijo: "/admin/accesos", titulo: "Accesos" },
+  { prefijo: "/admin/invitaciones", titulo: "Invitaciones" },
   { prefijo: "/admin/usuarios", titulo: "Usuarios" },
   { prefijo: "/admin/ajustes", titulo: "Ajustes" },
   { prefijo: "/admin", titulo: "Resumen", exacto: true },

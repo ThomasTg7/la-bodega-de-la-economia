@@ -24,7 +24,6 @@ plan, el sitio no levanta.
 |---|---|
 | `DATABASE_URL` | la base que creas en cPanel → MySQL Databases |
 | `SESION_SECRETO` | se genera a mano (ver abajo) |
-| `CLAVE_REGISTRO` | la eliges tú; habilita crear cuentas en /admin/registro |
 | `NEXT_PUBLIC_SITIO_URL` | opcional; sin ella cae a `https://labodegadelaeconomia.cl` |
 | `ADMIN_EMAIL_INICIAL` | solo la lee el seed |
 | `ADMIN_PASS_INICIAL` | solo la lee el seed |
@@ -149,16 +148,20 @@ cotejo de la base es `utf8mb4_unicode_ci`.
 
 Para crear una cuenta hay dos caminos, y basta con uno:
 
-- **La palabra clave compartida.** Quien la sepa entra a `/admin/registro`, la
-  escribe y se crea la cuenta solo. Es el valor de `CLAVE_REGISTRO` en las
-  variables de entorno. Se la pasas por WhatsApp a quien corresponda y listo.
-- **La lista de Accesos del panel.** Si agregas un correo ahí, esa persona puede
-  registrarse sin saber la palabra clave.
+- **Un link de invitación.** Se genera en el panel, en **Invitar**. Sirve una
+  sola vez y vence a los 30 minutos, así que se crea cuando la persona ya está
+  frente al teléfono lista para registrarse. El link completo se muestra una
+  sola vez, al crearlo: en la base queda su sha256, de modo que ni un respaldo
+  ni un `npm run exportar` alcanzan para fabricarse una cuenta.
+- **Crearle la cuenta tú.** En **Usuarios**: le pones nombre, usuario, correo y
+  una clave inicial, y le pasas esa clave. Después ella la cambia en la misma
+  pantalla.
 
-Si `CLAVE_REGISTRO` no está definida, el primer camino queda **cerrado**, no
-abierto: olvidar la variable no puede dejar el registro a merced de cualquiera
-que llegue a la URL. Para cambiar quién puede entrar, cambia la palabra: las
-cuentas ya creadas siguen funcionando.
+`/admin/registro` sin un link válido no muestra formulario: no hay palabra
+clave que sirva ni forma de registrarse por la sola URL. Antes existía
+`CLAVE_REGISTRO`, una palabra compartida que no caducaba nunca; se eliminó
+justamente porque quien la supo alguna vez podía crearse una cuenta meses
+después.
 
 ### Cuando nadie puede entrar
 

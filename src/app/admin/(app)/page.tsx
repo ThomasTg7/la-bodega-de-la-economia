@@ -2,10 +2,12 @@ import { db } from "@/lib/db";
 import ResumenPanel from "@/components/admin/ResumenPanel";
 
 export default async function PaginaInicioAdmin() {
-  const [productos, mensajesSinLeer, accesosPendientes] = await Promise.all([
+  const [productos, mensajesSinLeer, invitacionesActivas] = await Promise.all([
     db.producto.findMany({ orderBy: { orden: "asc" } }),
     db.mensaje.count({ where: { leido: false } }),
-    db.correoAutorizado.count({ where: { usado: false } }),
+    // Solo las que todavía sirven: las vencidas y las usadas no son un
+    // pendiente de nadie.
+    db.invitacion.count({ where: { usadaEn: null, expiraEn: { gt: new Date() } } }),
   ]);
 
   const activos = productos.filter((p) => p.activo).length;
@@ -38,11 +40,11 @@ export default async function PaginaInicioAdmin() {
           resaltar: mensajesSinLeer > 0,
         },
         {
-          href: "/admin/accesos",
-          numero: accesosPendientes,
-          etiqueta: "Invitaciones sin usar",
+          href: "/admin/invitaciones",
+          numero: invitacionesActivas,
+          etiqueta: "Invitaciones activas",
           icono: "llave",
-          resaltar: accesosPendientes > 0,
+          resaltar: invitacionesActivas > 0,
         },
         {
           href: "/admin/productos",

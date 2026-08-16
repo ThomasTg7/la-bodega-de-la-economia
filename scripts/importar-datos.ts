@@ -13,8 +13,8 @@
  * que traiga el JSON.
  *
  * El orden de las tablas no es casual: Ajustes y Producto no dependen de
- * nadie, pero conviene dejar Usuario y CorreoAutorizado para el final porque
- * son los que importan si algo falla a mitad de camino — así se nota.
+ * nadie, pero conviene dejar Usuario para el final porque es el que importa
+ * si algo falla a mitad de camino — así se nota.
  */
 import { PrismaClient } from "@prisma/client";
 import { readFileSync, existsSync } from "node:fs";
@@ -28,7 +28,9 @@ type Volcado = {
   productos: Record<string, unknown>[];
   ajustes: Record<string, unknown> | null;
   usuarios: Record<string, unknown>[];
-  correosAutorizados: Record<string, unknown>[];
+  // Los volcados viejos traen la lista de correos autorizados, que ya no
+  // existe: se acepta el campo para poder leerlos, y no se carga.
+  correosAutorizados?: Record<string, unknown>[];
   mensajes: Record<string, unknown>[];
 };
 
@@ -77,7 +79,6 @@ async function main() {
   console.log(`  productos            ${datos.productos.length}`);
   console.log(`  ajustes              ${datos.ajustes ? 1 : 0}`);
   console.log(`  usuarios             ${datos.usuarios.length}`);
-  console.log(`  correos autorizados  ${datos.correosAutorizados.length}`);
   console.log(`  mensajes             ${datos.mensajes.length}`);
 
   if (!aplicar) {
@@ -120,18 +121,6 @@ async function main() {
     });
   }
   console.log(`  ${datos.mensajes.length} mensajes cargados.`);
-
-  for (const correo of datos.correosAutorizados) {
-    const fila = revivirFechas(correo) as { id: string };
-    await db.correoAutorizado.upsert({
-      where: { id: fila.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      update: fila as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      create: fila as any,
-    });
-  }
-  console.log(`  ${datos.correosAutorizados.length} correos autorizados cargados.`);
 
   // Al final y contadas aparte: son las cuentas del panel, con su hash de
   // clave. Si esto no sale, nadie puede entrar a administrar el sitio.

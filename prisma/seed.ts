@@ -103,11 +103,6 @@ async function main() {
       update: {},
       create: { email, hashClave, nombre: "Administrador", rol: "admin" },
     });
-    await db.correoAutorizado.upsert({
-      where: { email },
-      update: { usado: true },
-      create: { email, nota: "Cuenta inicial", usado: true, usadoEn: new Date() },
-    });
     console.log(`Usuario admin listo: ${email}`);
   }
 }

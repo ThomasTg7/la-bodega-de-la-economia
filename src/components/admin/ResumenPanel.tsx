@@ -156,7 +156,7 @@ export default function ResumenPanel({
             <Icono nombre="caja" tam={16} />
             Cambiar precios
           </AccesoDirecto>
-          <AccesoDirecto href="/admin/accesos">
+          <AccesoDirecto href="/admin/invitaciones">
             <Icono nombre="llave" tam={16} />
             Invitar a alguien
           </AccesoDirecto>

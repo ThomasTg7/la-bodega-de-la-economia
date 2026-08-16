@@ -4,6 +4,12 @@ import { leerSesion } from "@/lib/sesion";
 
 type Contexto = { params: Promise<{ id: string }> };
 
+/**
+ * Anula un link. Borra la fila y con eso el hash: el link deja de servir en
+ * el acto, aunque le queden minutos. Las cuentas ya creadas con ese link no
+ * se tocan — para sacar a alguien del panel hay que borrar su cuenta, que es
+ * otra cosa.
+ */
 export async function DELETE(_request: NextRequest, { params }: Contexto) {
   const sesion = await leerSesion();
   if (!sesion) {
@@ -11,16 +17,11 @@ export async function DELETE(_request: NextRequest, { params }: Contexto) {
   }
 
   const { id } = await params;
-  const acceso = await db.correoAutorizado.findUnique({ where: { id } });
-  if (!acceso) {
-    return NextResponse.json({ error: "Acceso no encontrado." }, { status: 404 });
+  try {
+    await db.invitacion.delete({ where: { id } });
+  } catch {
+    return NextResponse.json({ error: "Esa invitación ya no existe." }, { status: 404 });
   }
-
-  // Revocar un correo ya usado también elimina la cuenta asociada.
-  if (acceso.usado) {
-    await db.usuario.deleteMany({ where: { email: acceso.email } });
-  }
-  await db.correoAutorizado.delete({ where: { id } });
 
   return NextResponse.json({ ok: true });
 }

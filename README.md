@@ -44,13 +44,19 @@ Cada tarjeta muestra el nombre, la foto, la descripción corta y un solo precio,
 
 ## Cómo invitar a alguien para que también pueda entrar al panel
 
-1. Ve a **Accesos** en el menú.
-2. Escribe el correo de la persona (y opcionalmente una nota, como "Mi hermano" o "Contador").
-3. Toca **Invitar**.
-4. Pásale a esa persona el link que dice el recuadro celeste (o toca "Copiar link de registro" y envíaselo por WhatsApp).
-5. Esa persona entra a ese link, pone **el mismo correo** que invitaste, elige un nombre y una clave, y listo — ya tiene su propia cuenta.
+1. Ve a **Invitar** en el menú.
+2. Si quieres, escribe para quién es (como "Mi hermano" o "Contador"). Es solo para que tú te acuerdes.
+3. Toca **Crear link**.
+4. Aparece el link en un recuadro. Toca **Copiar link** y mándaselo por WhatsApp **al tiro**.
+5. Esa persona abre el link, pone su correo, elige un usuario, su nombre y una clave, y listo — ya tiene su cuenta.
 
-Nadie más puede crearse una cuenta si no invitaste antes su correo. Si quieres quitarle el acceso a alguien, en la misma página toca **Revocar** al lado de su nombre.
+Tres cosas que conviene tener claras:
+
+- El link **dura 30 minutos** y sirve **una sola vez**. Créalo cuando la persona ya esté con el teléfono en la mano; si se vence, creas otro y no pasa nada.
+- El link completo **se muestra una sola vez**, cuando lo creas. Si cierras esa pantalla sin copiarlo, no hay forma de recuperarlo: se crea otro.
+- Sin link no hay registro. Nadie puede crearse una cuenta entrando a `/admin/registro` por su cuenta.
+
+En la lista de abajo ves los links que has creado, con su estado (activa, cuenta creada o vencida) y cuánto le queda a cada uno. **Anular** deja un link sin efecto en el acto, aunque le queden minutos.
 
 ---
 

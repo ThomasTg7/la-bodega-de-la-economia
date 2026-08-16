@@ -23,10 +23,9 @@ export const esquemaRegistro = z.object({
   usuario: NOMBRE_USUARIO,
   nombre: z.string().trim().min(2).max(60),
   clave: z.string().min(8).max(72),
-  // La palabra clave compartida que habilita el registro. Vacía se acepta en
-  // el esquema y la rechaza la ruta: así el mensaje de error distingue entre
-  // "te faltan datos" y "esa palabra clave no es".
-  palabraClave: z.string().max(200).default(""),
+  // El token del link de invitación. El largo se comprueba nomás: si vale o
+  // no lo dice la base, y de eso se encarga la ruta.
+  token: z.string().trim().min(10).max(200),
 });
 
 /** Cambio de clave propio, desde el panel. */
@@ -105,8 +104,8 @@ export function soloCamposEnviados<T extends object>(cuerpo: unknown, datos: T):
   ) as Partial<T>;
 }
 
-export const esquemaAcceso = z.object({
-  email: z.string().trim().toLowerCase().email(),
+/** Lo único que se elige al crear un link: para quién es. */
+export const esquemaInvitacion = z.object({
   nota: z.string().trim().max(120).default(""),
 });
 

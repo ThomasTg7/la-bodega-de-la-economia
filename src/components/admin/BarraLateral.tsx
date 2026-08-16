@@ -11,7 +11,7 @@ const ENLACES = [
   { href: "/admin", label: "Resumen", icono: "inicio", exacto: true },
   { href: "/admin/productos", label: "Productos", icono: "caja" },
   { href: "/admin/mensajes", label: "Mensajes", icono: "chat" },
-  { href: "/admin/accesos", label: "Accesos", icono: "llave" },
+  { href: "/admin/invitaciones", label: "Invitar", icono: "llave" },
   { href: "/admin/usuarios", label: "Usuarios", icono: "persona" },
   { href: "/admin/ajustes", label: "Ajustes", icono: "engranaje" },
 ];
