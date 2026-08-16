@@ -80,12 +80,20 @@ la versión de Node no es 22:
 
 ```bash
 source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/bodega
-npm install
+npm install --include=dev   # ver abajo por qué el --include=dev
 npm run generate            # genera el cliente de Prisma
 npx prisma db push          # crea las tablas
 npm run build
-touch tmp/restart.txt       # Passenger recarga el proceso
+mkdir -p tmp && touch tmp/restart.txt   # Passenger recarga el proceso
 ```
+
+El `--include=dev` no es opcional. La instalación de npm que deja el Node.js
+Selector viene con `omit=dev`, así que sin la bandera no bajan las
+devDependencies y el build muere buscando `typescript` y `tailwindcss`, o
+`npm run importar` corta con `tsx: command not found`.
+
+`tmp/` no está versionado, así que la primera vez hay que crearlo: un `touch`
+a secas falla con `No such file or directory` y el proceso nunca recarga.
 
 El `npm run generate` va en su propio paso y no en un `postinstall` a propósito.
 El Node.js Selector de cPanel guarda `node_modules` fuera de la carpeta de la
@@ -93,6 +101,12 @@ app —en `nodevenv/bodega/24/lib/`— y deja un enlace simbólico en su lugar. 
 eso, npm corre los scripts de ciclo de vida parado en la carpeta equivocada y
 un `postinstall` falla con `Cannot find module`. Ejecutarlo aparte, ya dentro
 del directorio correcto, lo evita.
+
+Ese mismo enlace simbólico es el que obliga a `next.config.ts` a mover la raíz
+de Turbopack un nivel más arriba. Turbopack no resuelve nada fuera de su raíz, y
+con la raíz en la carpeta de la app el build muere con `Symlink
+[project]/node_modules is invalid, it points out of the filesystem root`. El
+config lo detecta solo; está explicado ahí mismo.
 
 El `&&` de la primera línea junta la activación con el `cd`: si se corren
 sueltas y la sesión se corta, se termina trabajando desde el home sin notarlo.
@@ -107,6 +121,14 @@ sueltas y la sesión se corta, se termina trabajando desde el home sin notarlo.
   npm run importar                  # informe, no escribe nada
   npm run importar -- --aplicar     # carga de verdad
   ```
+
+  No lo hagas importando un dump `.sql` con `mysql <archivo`. Un dump hecho
+  en Windows trae los nombres de tabla en minúscula, porque ahí MariaDB corre
+  con `lower_case_table_names=1`. El hosting es Linux y distingue mayúsculas:
+  Prisma busca `Producto` y `Usuario`, no encuentra las `producto` y
+  `usuario` importadas, y el siguiente `db push` las da por desconocidas y
+  **las borra**. El script `importar` escribe por Prisma Client y no tiene ese
+  problema.
 
 - **O empezar de cero** con los productos y textos de fábrica:
 
@@ -125,7 +147,7 @@ Cada vez que quieras publicar cambios, desde la Terminal de cPanel:
 ```bash
 source /home4/cla118604/nodevenv/bodega/24/bin/activate && cd /home4/cla118604/bodega
 git pull
-npm ci
+npm ci --include=dev
 npm run generate
 npx prisma db push
 npm run build

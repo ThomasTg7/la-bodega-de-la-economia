@@ -48,6 +48,7 @@ next-env.d.ts
 # versiona: lleva los hashes de clave de las cuentas del panel y los mensajes
 # que mandó la gente por el formulario.
 /datos-exportados.json
+*.sql
 
 # uploads del admin
 /public/uploads/*
