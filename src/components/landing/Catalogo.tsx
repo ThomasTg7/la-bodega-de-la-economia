@@ -56,10 +56,11 @@ export default function Catalogo({ productos, titulo, bajada, pedidoMinimo }: Pr
           </div>
         </SeccionEntrada>
 
-        <div
-          className="mt-12 grid gap-7"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
-        >
+        {/* Dos por fila en el teléfono: la fruta se compara mirando, y una
+            tarjeta por pantalla obliga a scrollear para ver la siguiente. El
+            auto-fit de antes no servía para eso — con 280px de mínimo, en un
+            teléfono siempre daba una sola columna. */}
+        <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-7 md:grid-cols-3 xl:grid-cols-4">
           {productos.map((producto, i) => (
             <TarjetaProducto
               key={producto.id}
