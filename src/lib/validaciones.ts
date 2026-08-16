@@ -28,6 +28,13 @@ export const esquemaRegistro = z.object({
   token: z.string().trim().min(10).max(200),
 });
 
+/** Datos propios editables desde el panel. La clave va aparte. */
+export const esquemaMiCuenta = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  usuario: NOMBRE_USUARIO,
+  nombre: z.string().trim().min(2).max(60),
+});
+
 /** Cambio de clave propio, desde el panel. */
 export const esquemaCambioClave = z.object({
   // La actual se pide entera aunque solo se compare contra el hash: es lo que

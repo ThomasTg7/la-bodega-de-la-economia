@@ -20,6 +20,14 @@ const TRAZOS: Record<string, React.ReactNode> = {
       <path d="m10.7 12.3 8.3-8.3 3 3-2 2-2-2-2.6 2.6 2 2-2 2" />
     </>
   ),
+  qr: (
+    <>
+      <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2" />
+      <rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2" />
+      <rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2" />
+      <path d="M14 14h3v3h-3zM20.5 14v3M17.5 20.5h3M14 20.5h.01" />
+    </>
+  ),
   persona: (
     <>
       <circle cx="12" cy="8" r="3.6" />

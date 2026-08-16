@@ -64,12 +64,28 @@ En la lista de abajo ves los links que has creado, con su estado (activa, cuenta
 
 En **Usuarios** hay dos cosas:
 
+- **Mis datos**: cambia tu nombre, tu nombre de usuario o tu correo. Con cualquiera de los dos últimos entras al panel, así que ojo: si cambias el usuario, la próxima vez entras con el nuevo.
 - **Cambiar mi clave**: escribe la que tienes ahora y la nueva dos veces. Solo cambia la tuya, no la de otra persona.
 - **Crear un usuario**: nombre, usuario, correo y una clave inicial. La cuenta queda lista al toque y esa persona entra con el usuario (o el correo) y la clave que le pusiste; después ella misma la puede cambiar en esta pantalla.
 
 La diferencia con **Accesos** es quién hace el trabajo: en Accesos invitas un correo y la persona se crea la cuenta sola; en Usuarios se la creas tú y le pasas la clave. Cualquiera que esté dentro del panel puede crear cuentas, así que la clave del panel es la llave de todo: no la compartas con quien no corresponda.
 
 Abajo de todo sale la lista de cuentas que existen, con la última vez que entró cada una.
+
+---
+
+## Cómo hacer el código QR del negocio
+
+En **QR** del menú armas el código para pegar en el mesón, en un volante o en el vidrio del local.
+
+1. Elige qué abre: **La página web**, **WhatsApp** (con el número que tengas en Ajustes) o **Otra cosa**, si quieres poner otro link.
+2. Elige el color. El **negro** es el que mejor leen todas las cámaras, y por eso viene puesto; los demás son para cuando el diseño lo pide. Si eliges uno muy claro, te avisa que puede costar leerlo.
+3. El **logo va al centro** por defecto. No estorba: el código se genera con corrección de errores alta, que es justo lo que permite tapar el medio y que se siga leyendo.
+4. Elige el tamaño y toca **Descargar PNG**. Un QR es un dibujo de cuadrados, no una foto: se genera al tamaño que pidas, así que sale nítido hasta en un letrero grande.
+
+El fondo **transparente** sirve si vas a pegar el QR sobre un diseño de color. Eso sí, tiene que quedar sobre algo claro: sobre fondo oscuro no se lee.
+
+Antes de mandarlo a imprimir, escanéalo tú con la cámara del teléfono.
 
 ---
 

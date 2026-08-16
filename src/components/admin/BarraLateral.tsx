@@ -12,6 +12,7 @@ const ENLACES = [
   { href: "/admin/productos", label: "Productos", icono: "caja" },
   { href: "/admin/mensajes", label: "Mensajes", icono: "chat" },
   { href: "/admin/invitaciones", label: "Invitar", icono: "llave" },
+  { href: "/admin/qr", label: "QR", icono: "qr" },
   { href: "/admin/usuarios", label: "Usuarios", icono: "persona" },
   { href: "/admin/ajustes", label: "Ajustes", icono: "engranaje" },
 ];
@@ -140,7 +141,7 @@ export default function BarraLateral({ mensajesSinLeer = 0 }: { mensajesSinLeer?
               key={enlace.href}
               href={enlace.href}
               aria-current={activo ? "page" : undefined}
-              className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium"
+              className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-[9.5px] font-medium"
               style={{ color: activo ? "var(--color-verde-700)" : "var(--color-tinta-suave)" }}
             >
               {activo && (

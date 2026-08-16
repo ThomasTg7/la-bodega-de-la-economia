@@ -22,7 +22,9 @@ export default async function PaginaUsuarios() {
       <h1 className="font-titulo text-verde-700" style={{ fontSize: 28 }}>
         Usuarios
       </h1>
-      <p className="mt-1 text-tinta-suave">Cambia tu clave y crea cuentas para el equipo.</p>
+      <p className="mt-1 text-tinta-suave">
+        Tus datos, tu clave y las cuentas del equipo.
+      </p>
       <div className="mt-6">
         <PanelUsuarios sesionId={sesion.usuarioId} inicial={usuarios} />
       </div>
