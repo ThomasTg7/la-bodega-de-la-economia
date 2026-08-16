@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import type { CorreoAutorizado } from "@prisma/client";
 import { useToast } from "./Toast";
 
@@ -92,6 +93,13 @@ export default function PanelAccesos({ inicial }: { inicial: CorreoAutorizado[] 
         >
           Copiar link de registro
         </button>
+        <p className="mt-3 text-xs">
+          ¿Prefieres crearle la cuenta tú y pasarle la clave?{" "}
+          <Link href="/admin/usuarios" className="font-semibold underline">
+            Hazlo desde Usuarios
+          </Link>
+          .
+        </p>
       </div>
 
       <form onSubmit={invitar} className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">

@@ -21,7 +21,8 @@ const MANDARINA = {
   descripcion: "Mandarina dulce y fácil de pelar, de calibre parejo. Sale rápido en mostrador.",
   unidad: "kg",
   precioBase: 1000,
-  kilosDescuento: 10,
+  // Sin kilosDescuento ni precioDescuento: la mandarina no tiene escalon por
+  // volumen, y el umbral suelto solo haria que el panel pida el precio que falta.
   imagenTextura: "/texturas/mandarinas.webp",
   imagenRecorte: "/recortes/mandarina.png",
   // Sacado del propio recorte: el promedio de sus píxeles saturados.

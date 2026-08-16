@@ -22,6 +22,8 @@ Para entrar al panel de administración, ve a **http://localhost:3000/admin**
 2. En el menú de la izquierda (o abajo si estás en el celular), toca **Productos**.
 3. Toca el nombre del producto que quieres cambiar (Palta Hass, Limón o Naranja).
 4. Busca la tarjeta **Precios** y cambia el número que quieras. Si dejas un precio vacío, ese formato simplemente no se muestra en la página (por ejemplo, si no vendes por caja, deja "Precio por caja" vacío).
+   - **Descuento por volumen**: necesita las dos casillas llenas, el "Precio con descuento" y el "El descuento se aplica desde". Si dejas cualquiera de las dos vacía, ese producto queda sin descuento y no se muestra ninguno. Si llenas solo una, el formulario te avisa en naranja.
+   - **Caja y bin**: cada uno tiene una casilla **Mostrar en el detalle**. Marcada, el formato sale en la ficha del producto; desmarcada, no sale pero el precio queda guardado, así que puedes volver a mostrarlo sin escribirlo de nuevo.
 5. Al lado derecho vas a ver una **vista previa** que se actualiza mientras escribes, así ves cómo va a quedar antes de guardar.
 6. Cuando termines, abajo va a aparecer una barra que dice **"Tienes cambios sin guardar"**. Toca **Guardar**.
 
@@ -29,7 +31,14 @@ Los cambios se ven en la página inmediatamente (recarga la página si no los ve
 
 ### Mostrar u ocultar un producto
 
-En la lista de **Productos**, cada uno tiene un interruptor a la derecha. Si lo apagas, el producto deja de aparecer en la página (útil si se te acabó algo por un tiempo), pero no lo borra — lo puedes prender de nuevo cuando quieras.
+En la lista de **Productos**, cada uno tiene un interruptor a la derecha. Si lo apagas, el producto deja de aparecer en la página (útil si se te acabó algo por un tiempo), pero no lo borra ni le toca nada: fotos, textos y precios quedan tal cual, y lo puedes prender de nuevo cuando quieras.
+
+### Qué ve el cliente en el catálogo
+
+Cada tarjeta muestra el nombre, la foto, la descripción corta y un solo precio, el por mayor. Abajo tiene dos botones:
+
+- **Más detalles** abre la ficha completa: la foto grande, la descripción entera, el precio por mayor, el descuento por volumen si lo tiene y los formatos de caja y bin que hayas marcado.
+- **Cotizar** abre WhatsApp con el mensaje ya escrito.
 
 ---
 
@@ -42,6 +51,19 @@ En la lista de **Productos**, cada uno tiene un interruptor a la derecha. Si lo 
 5. Esa persona entra a ese link, pone **el mismo correo** que invitaste, elige un nombre y una clave, y listo — ya tiene su propia cuenta.
 
 Nadie más puede crearse una cuenta si no invitaste antes su correo. Si quieres quitarle el acceso a alguien, en la misma página toca **Revocar** al lado de su nombre.
+
+---
+
+## Cómo cambiar tu clave o crearle la cuenta a alguien tú mismo
+
+En **Usuarios** hay dos cosas:
+
+- **Cambiar mi clave**: escribe la que tienes ahora y la nueva dos veces. Solo cambia la tuya, no la de otra persona.
+- **Crear un usuario**: nombre, usuario, correo y una clave inicial. La cuenta queda lista al toque y esa persona entra con el usuario (o el correo) y la clave que le pusiste; después ella misma la puede cambiar en esta pantalla.
+
+La diferencia con **Accesos** es quién hace el trabajo: en Accesos invitas un correo y la persona se crea la cuenta sola; en Usuarios se la creas tú y le pasas la clave. Cualquiera que esté dentro del panel puede crear cuentas, así que la clave del panel es la llave de todo: no la compartas con quien no corresponda.
+
+Abajo de todo sale la lista de cuentas que existen, con la última vez que entró cada una.
 
 ---
 
@@ -61,7 +83,7 @@ Nadie más puede crearse una cuenta si no invitaste antes su correo. Si quieres 
 ## Cómo agregar un producto nuevo
 
 1. Ve a **Productos** y toca **+ Agregar producto**.
-2. Completa el nombre, una descripción corta y los precios que correspondan.
+2. Completa el nombre, una descripción corta y los precios que correspondan. Acuérdate de marcar **Mostrar en el detalle** en caja o bin si los vendes así: un producto nuevo nace con las dos casillas apagadas.
 3. Sube dos fotos:
    - **Foto de fondo**: se ve mejor si es una foto de hartas frutas juntas (como las que ya tienes de fondo en Palta, Limón y Naranja).
    - **Foto recortada**: tiene que ser una foto de la fruta sola, **con el fondo transparente** (formato PNG). Si no tienes una así todavía, puedes tocar "Usar la de la bodega" para usar una imagen de referencia mientras consigues la tuya.
@@ -134,6 +156,9 @@ npm run db:studio        # abre una interfaz visual de la base de datos
 npm run imagenes          # regenera los recortes y texturas desde assets-originales/
 npm run limpiar            # informe de mensajes viejos e imágenes sueltas (no borra)
 npm run limpiar -- --aplicar  # ejecuta esa limpieza de verdad
+npm run usuario             # crea una cuenta del panel o repone una clave olvidada
+npm run formatos             # informe de qué productos tienen precio de caja o bin sin mostrar
+npm run formatos -- --aplicar # marca esos formatos para que salgan en la ficha
 ```
 
 ### Cómo se guardan las imágenes subidas

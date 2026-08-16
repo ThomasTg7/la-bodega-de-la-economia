@@ -142,6 +142,28 @@ quedaría en `~/.bash_history` y a la vista de cualquier `ps`.
 Los nombres de tabla distinguen mayúsculas en este servidor. Es `FROM Producto`,
 no `FROM producto`.
 
+### Cuando el cambio de esquema pide además arreglar los datos
+
+Una columna nueva llega con su valor por defecto en todas las filas que ya
+existen, y ese defecto no siempre es el que querías para lo de antes. Cuando
+pasa, hay un script que lo arregla, y va **después** del `db push`.
+
+Hasta ahora hay uno: las casillas de caja y bin (`mostrarCaja`, `mostrarBin`)
+nacen apagadas, así que sin esto los productos que ya tenían esos precios
+dejan de mostrar el formato en la ficha.
+
+```bash
+npm run formatos
+```
+
+```bash
+npm run formatos -- --aplicar
+```
+
+El primero es un informe y no escribe nada. Solo prende casillas: nunca apaga
+una que hayas apagado a mano desde el panel, así que correrlo de más no hace
+daño.
+
 ## Paso 5 — Compilar
 
 ```bash
@@ -185,6 +207,8 @@ mkdir -p tmp && touch tmp/restart.txt
   caché del navegador.
 - Entra a `/admin/login` y confirma que puedes iniciar sesión.
 - Si cambiaste productos o precios, míralos en la portada.
+- Si el cambio tocó el esquema, abre un producto en el panel y comprueba que
+  siguen ahí sus fotos, su descripción y sus precios.
 
 ---
 
