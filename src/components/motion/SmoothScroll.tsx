@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Lenis from "lenis";
+import type Lenis from "lenis";
 import { registrarLenis } from "@/lib/lenis-instancia";
 
 /**
@@ -19,19 +19,28 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     ).matches;
     if (prefiereMenosMovimiento) return;
 
-    const lenis = new Lenis({
-      lerp: 0.085,
-      wheelMultiplier: 1,
-      smoothWheel: true,
-      syncTouch: false,
-      autoRaf: true,
-      anchors: true,
+    // Import dinamico: Lenis solo se usa dentro de este efecto, asi que no
+    // tiene por que viajar en el JS que se descarga antes de pintar la
+    // pagina. `cancelado` cubre el caso de un unmount tan rapido que la
+    // instancia terminaria de crearse despues de que el efecto ya se limpio.
+    let cancelado = false;
+    import("lenis").then(({ default: Lenis }) => {
+      if (cancelado) return;
+      const lenis = new Lenis({
+        lerp: 0.085,
+        wheelMultiplier: 1,
+        smoothWheel: true,
+        syncTouch: false,
+        autoRaf: true,
+        anchors: true,
+      });
+      lenisRef.current = lenis;
+      registrarLenis(lenis);
     });
-    lenisRef.current = lenis;
-    registrarLenis(lenis);
 
     return () => {
-      lenis.destroy();
+      cancelado = true;
+      lenisRef.current?.destroy();
       lenisRef.current = null;
       registrarLenis(null);
     };

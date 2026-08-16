@@ -66,55 +66,76 @@ export default function FondoPortada() {
   const esMovil = useEsMovil();
   const reducido = useMovimientoReducido();
   const [actual, setActual] = useState(0);
+  // La primera escena es el LCP y va siempre. Las otras dos no hacen falta
+  // para el primer pintado, así que su descarga se pospone hasta que la
+  // página ya terminó de cargar del todo: no le compiten ancho de banda a
+  // la foto que sí importa apenas se entra. El cruce recién arranca a los
+  // 5s (INTERVALO_MS), que es tiempo de sobra para que esto ya esté listo.
+  const [listas, setListas] = useState(false);
 
   const escenas = esMovil ? ESCENAS : ESCENAS.filter((e) => !e.soloMovil);
   const total = escenas.length;
 
   useEffect(() => {
-    if (reducido) return;
+    // Sin rama para "ya está complete": este componente monta pegado al
+    // arranque de la página (va dentro del Hero), mucho antes de que el
+    // evento `load` — que espera hasta la última imagen — pueda haber
+    // disparado ya.
+    const marcarListas = () => setListas(true);
+    window.addEventListener("load", marcarListas);
+    return () => window.removeEventListener("load", marcarListas);
+  }, []);
+
+  useEffect(() => {
+    if (reducido || !listas) return;
     // Si el largo cambia (se hidrata el hook y aparece la tercera), el índice
     // podría quedar apuntando a una escena que ya no está.
     setActual((i) => i % total);
     const id = setInterval(() => setActual((i) => (i + 1) % total), INTERVALO_MS);
     return () => clearInterval(id);
-  }, [reducido, total]);
+  }, [reducido, listas, total]);
 
   return (
     <>
-      {escenas.map((escena, i) => (
-        <motion.div
-          key={escena.nombre}
-          className="absolute inset-0"
-          // `initial={false}` para que la primera foto ya esté visible en el
-          // primer frame: si entrara animando, la portada arrancaría en verde.
-          initial={false}
-          animate={{ opacity: i === actual ? 1 : 0 }}
-          transition={{ duration: CRUCE_S, ease: "easeInOut" }}
-        >
-          <picture>
-            <source
-              media="(max-width: 767px)"
-              srcSet={`/texturas/portada/${escena.nombre}-movil.webp`}
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/texturas/portada/${
-                escena.soloMovil ? `${escena.nombre}-movil` : escena.nombre
-              }.webp`}
-              alt={escena.alt}
-              // La primera es el LCP y va con prioridad. Las otras tienen que
-              // estar descargadas antes de que les toque el cambio, así que
-              // también van en `eager`: en lazy dependerían de que dispare el
-              // IntersectionObserver y aparecerían de golpe.
-              fetchPriority={i === 0 ? "high" : "low"}
-              loading="eager"
-              decoding="async"
-              draggable={false}
-              className="h-full w-full object-cover object-center"
-            />
-          </picture>
-        </motion.div>
-      ))}
+      {escenas.map((escena, i) => {
+        // Las escenas 2 y 3 ni se montan hasta que `listas` es true: antes
+        // de eso no hay nada que animar, la primera se queda quieta.
+        if (i > 0 && !listas) return null;
+        return (
+          <motion.div
+            key={escena.nombre}
+            className="absolute inset-0"
+            // `initial={false}` para que la primera foto ya esté visible en el
+            // primer frame: si entrara animando, la portada arrancaría en verde.
+            initial={false}
+            animate={{ opacity: i === actual ? 1 : 0 }}
+            transition={{ duration: CRUCE_S, ease: "easeInOut" }}
+          >
+            <picture>
+              <source
+                media="(max-width: 767px)"
+                srcSet={`/texturas/portada/${escena.nombre}-movil.webp`}
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/texturas/portada/${
+                  escena.soloMovil ? `${escena.nombre}-movil` : escena.nombre
+                }.webp`}
+                alt={escena.alt}
+                // La primera es el LCP y va con prioridad. Las otras tienen que
+                // estar descargadas antes de que les toque el cambio, así que
+                // también van en `eager`: en lazy dependerían de que dispare el
+                // IntersectionObserver y aparecerían de golpe.
+                fetchPriority={i === 0 ? "high" : "low"}
+                loading="eager"
+                decoding="async"
+                draggable={false}
+                className="h-full w-full object-cover object-center"
+              />
+            </picture>
+          </motion.div>
+        );
+      })}
     </>
   );
 }

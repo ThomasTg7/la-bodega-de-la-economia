@@ -9,6 +9,7 @@ import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { useBurbujaWhatsApp } from "@/lib/burbuja-whatsapp-contexto";
 import { clp } from "@/lib/precios";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
+import { texturaDe } from "@/lib/texturas-producto";
 
 type Props = {
   producto: Producto;
@@ -16,15 +17,6 @@ type Props = {
   /** Kilos minimos por pedido, del campo del panel. Va en el mensaje de
    *  WhatsApp para que nadie pida menos de lo que se puede despachar. */
   pedidoMinimo: number;
-};
-
-// Los slugs no calzan uno a uno con los nombres de archivo (palta-hass ->
-// paltas.webp), así que el mapa es explícito en vez de interpolado.
-const TEXTURA_POR_SLUG: Record<string, string> = {
-  "palta-hass": "/texturas/paltas.webp",
-  limon: "/texturas/limones.webp",
-  naranja: "/texturas/naranjas.webp",
-  mandarina: "/texturas/mandarinas.webp",
 };
 
 const BLUR_POR_SLUG: Record<string, string> = {
@@ -39,8 +31,7 @@ export default function TarjetaProducto({ producto, indice, pedidoMinimo }: Prop
   const precioRef = useRef<HTMLDivElement>(null);
   const precioEnVista = useInView(precioRef, { once: true, amount: 0.4 });
 
-  const foto =
-    producto.imagenTextura || TEXTURA_POR_SLUG[producto.slug] || "/texturas/paltas.webp";
+  const foto = texturaDe(producto);
   const blur = BLUR_POR_SLUG[producto.slug] ?? BLUR_TEXTURAS.paltas;
   // La tarjeta muestra un solo numero, el precio de lista. El descuento por
   // volumen y los formatos (caja, bin) se conversan por WhatsApp, que es

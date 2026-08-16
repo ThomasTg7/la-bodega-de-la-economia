@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { leerSesion } from "@/lib/sesion";
 import { esquemaAjustes } from "@/lib/validaciones";
@@ -29,5 +30,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   const ajustes = await db.ajustes.update({ where: { id: "sitio" }, data: datos.data });
+  revalidatePath("/");
   return NextResponse.json(ajustes);
 }

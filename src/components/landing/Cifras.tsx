@@ -3,18 +3,8 @@
 import TextoRevelado from "@/components/motion/TextoRevelado";
 import SeccionEntrada from "@/components/motion/SeccionEntrada";
 import { BLUR_TEXTURAS } from "@/lib/blur-placeholders";
+import { HORARIOS } from "@/lib/horarios";
 import FranjaParallax from "./FranjaParallax";
-
-/**
- * Los horarios están acá y no en `Ajustes.horario` porque son tres líneas con
- * estructura (día, apertura, cierre) y ese campo es una sola frase suelta. El
- * de la base sigue alimentando el pie y la ficha del local.
- */
-const HORARIOS = [
-  { dias: "Lunes a viernes", horas: "9:00 a 20:00" },
-  { dias: "Sábado", horas: "9:00 a 15:00" },
-  { dias: "Domingo", horas: "Cerrado", cerrado: true },
-];
 
 export default function Cifras() {
   return (

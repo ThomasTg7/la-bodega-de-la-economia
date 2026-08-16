@@ -14,6 +14,7 @@ SQLite ni la carpeta `public/uploads` que se usaban en local sobreviven ahí.
 | `SESION_SECRETO` | se genera a mano (ver abajo) |
 | `ADMIN_EMAIL_INICIAL` | solo la usa el seed |
 | `ADMIN_PASS_INICIAL` | solo la usa el seed |
+| `NEXT_PUBLIC_SITIO_URL` | opcional — el dominio real para canonical/OG/sitemap. Sin ella cae a `https://labodegadelaeconomia.cl` |
 
 Generar el secreto de sesión:
 

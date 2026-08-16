@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { leerSesion } from "@/lib/sesion";
 import { esquemaProducto } from "@/lib/validaciones";
@@ -40,5 +41,6 @@ export async function POST(request: NextRequest) {
     data: { ...datos.data, orden: (maxOrden._max.orden ?? -1) + 1 },
   });
 
+  revalidatePath("/");
   return NextResponse.json(producto, { status: 201 });
 }
