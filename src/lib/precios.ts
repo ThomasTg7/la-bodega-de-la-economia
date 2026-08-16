@@ -1,7 +1,8 @@
 export type ProductoParaCalculo = {
   precioBase: number | null;
   precioDescuento: number | null;
-  kilosDescuento: number;
+  /** Vacio (null) = el producto no tiene descuento por volumen. */
+  kilosDescuento: number | null;
 };
 
 export type ResultadoCalculo = {
@@ -12,9 +13,17 @@ export type ResultadoCalculo = {
   faltan: number;
 };
 
+/**
+ * Un descuento por volumen necesita las dos mitades: el precio rebajado y los
+ * kilos desde donde empieza a correr. Con una sola no hay escalon que aplicar,
+ * asi que el producto se cobra siempre a precio de lista.
+ */
+export function hayDescuento(producto: ProductoParaCalculo) {
+  return producto.precioDescuento != null && producto.kilosDescuento != null;
+}
+
 export function calcular(producto: ProductoParaCalculo, kilos: number): ResultadoCalculo {
-  const usaDescuento =
-    producto.precioDescuento != null && kilos >= producto.kilosDescuento;
+  const usaDescuento = hayDescuento(producto) && kilos >= producto.kilosDescuento!;
 
   const unitario = usaDescuento
     ? producto.precioDescuento!
@@ -27,7 +36,10 @@ export function calcular(producto: ProductoParaCalculo, kilos: number): Resultad
       ? (producto.precioBase - unitario) * kilos
       : 0;
 
-  const faltan = usaDescuento ? 0 : Math.max(0, producto.kilosDescuento - kilos);
+  const faltan =
+    usaDescuento || !hayDescuento(producto)
+      ? 0
+      : Math.max(0, producto.kilosDescuento! - kilos);
 
   return { unitario, total, usaDescuento, ahorro, faltan };
 }

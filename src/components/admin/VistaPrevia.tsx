@@ -13,7 +13,7 @@ export type DatosVista = {
   unidad: string;
   precioBase: number | null;
   precioDescuento: number | null;
-  kilosDescuento: number;
+  kilosDescuento: number | null;
   imagenTextura: string;
   imagenRecorte: string;
   colorAcento: string;
@@ -105,7 +105,10 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
   // Mismo criterio que TarjetaProducto: manda el precio de lista y el
   // descuento va al lado. Si acá se desalinea, la vista previa miente.
   const precioGrande = datos.precioBase ?? datos.precioDescuento;
-  const hayDescuento = datos.precioDescuento != null && datos.precioBase != null;
+  // El descuento necesita las dos mitades (precio rebajado y desde cuántos
+  // kilos), igual que en la página: con una sola no hay nada que mostrar.
+  const hayDescuento =
+    datos.precioDescuento != null && datos.precioBase != null && datos.kilosDescuento != null;
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-tinta/10 bg-white shadow-[var(--shadow-media)]">
@@ -160,8 +163,13 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
           </div>
         )}
 
-        <div className="mt-4 w-full rounded-full bg-verde-700 py-2.5 text-center text-sm font-semibold text-white">
-          Cotizar
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-full border border-verde-700/25 py-2.5 text-center text-sm font-semibold text-verde-700">
+            Más detalles
+          </div>
+          <div className="rounded-full bg-verde-700 py-2.5 text-center text-sm font-semibold text-white">
+            Cotizar
+          </div>
         </div>
       </div>
     </div>
@@ -170,8 +178,10 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
 
 /** Réplica de la columna izquierda de la calculadora de la página. */
 function VistaCalculadora({ datos }: { datos: DatosVista }) {
-  const kilos = datos.kilosDescuento;
-  const precio = datos.precioDescuento ?? datos.precioBase;
+  // Sin umbral de descuento no hay cantidad "interesante" que mostrar, así
+  // que la vista previa cae al kilo suelto para seguir mostrando el precio.
+  const kilos = datos.kilosDescuento ?? 1;
+  const precio = datos.kilosDescuento != null ? datos.precioDescuento ?? datos.precioBase : datos.precioBase ?? datos.precioDescuento;
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-tinta/10 bg-white p-5 shadow-[var(--shadow-media)]">

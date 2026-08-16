@@ -64,7 +64,10 @@ export const esquemaProducto = z.object({
   precioBin: z.number().int().min(0).nullable().optional(),
   kilosPorCaja: z.number().int().min(0).nullable().optional(),
   kilosPorBin: z.number().int().min(0).nullable().optional(),
-  kilosDescuento: z.number().int().min(1).default(10),
+  // Vacio = este producto no tiene descuento por volumen. Por eso nullable y
+  // sin default: un 10 puesto de oficio obligaria a que todo producto tenga
+  // un escalon de descuento, que es justo lo que no queremos.
+  kilosDescuento: z.number().int().min(1).nullable().optional(),
   imagenTextura: z.string().trim().default(""),
   imagenRecorte: z.string().trim().default(""),
   colorAcento: z
@@ -72,6 +75,10 @@ export const esquemaProducto = z.object({
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/)
     .default("#30CFB2"),
+  // Casillas del panel: mandan si el formato sale en el detalle del producto,
+  // aparte de que tenga precio cargado.
+  mostrarCaja: z.boolean().default(false),
+  mostrarBin: z.boolean().default(false),
   activo: z.boolean().default(true),
   destacado: z.boolean().default(false),
   orden: z.number().int().min(0).default(0),

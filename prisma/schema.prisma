@@ -38,7 +38,18 @@ model Producto {
 
   kilosPorCaja   Int?
   kilosPorBin    Int?
-  kilosDescuento Int  @default(10) @map("umbralMayorista")
+
+  /// Kilos desde donde se aplica `precioDescuento`. Nullable, y sin default:
+  /// vacio significa "este producto no tiene descuento por volumen", igual
+  /// que un precio vacio significa "no lo vendo asi". Con un default de 10
+  /// no habia forma de decir que no hay descuento.
+  kilosDescuento Int? @map("umbralMayorista")
+
+  /// Si el formato caja/bin se muestra en el detalle del producto. Va aparte
+  /// del precio a proposito: apagar el formato no borra lo que costaba, asi
+  /// que volver a prenderlo no obliga a escribir el precio de nuevo.
+  mostrarCaja Boolean @default(false)
+  mostrarBin  Boolean @default(false)
 
   imagenTextura String @default("") @db.VarChar(500)
   imagenRecorte String @default("") @db.VarChar(500)

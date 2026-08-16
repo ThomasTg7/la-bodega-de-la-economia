@@ -60,7 +60,7 @@ export default function Calculadora({ productos, pedidoMinimo }: Props) {
 
   const dim = DIMENSIONES_RECORTE[producto.slug] ?? DIMENSION_RECORTE_DEFECTO;
   // El recorrido arranca en el minimo y llega al triple.
-  const topeSlider = Math.max(pedidoMinimo * 3, producto.kilosDescuento * 2);
+  const topeSlider = Math.max(pedidoMinimo * 3, (producto.kilosDescuento ?? 0) * 2);
   const enPista = (n: number) =>
     ((Math.min(topeSlider, Math.max(pedidoMinimo, n)) - pedidoMinimo) /
       (topeSlider - pedidoMinimo)) *

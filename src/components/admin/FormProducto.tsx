@@ -25,7 +25,9 @@ type Datos = {
   precioBin: number | null;
   kilosPorCaja: number | null;
   kilosPorBin: number | null;
-  kilosDescuento: number;
+  kilosDescuento: number | null;
+  mostrarCaja: boolean;
+  mostrarBin: boolean;
   imagenTextura: string;
   imagenRecorte: string;
   colorAcento: string;
@@ -44,7 +46,9 @@ const VACIO: Datos = {
   precioBin: null,
   kilosPorCaja: null,
   kilosPorBin: null,
-  kilosDescuento: 10,
+  kilosDescuento: null,
+  mostrarCaja: false,
+  mostrarBin: false,
   imagenTextura: "",
   imagenRecorte: "",
   colorAcento: COLORES_ACENTO[0],
@@ -90,6 +94,8 @@ export default function FormProducto({
         kilosPorCaja: productoExistente.kilosPorCaja,
         kilosPorBin: productoExistente.kilosPorBin,
         kilosDescuento: productoExistente.kilosDescuento,
+        mostrarCaja: productoExistente.mostrarCaja,
+        mostrarBin: productoExistente.mostrarBin,
         imagenTextura: productoExistente.imagenTextura,
         imagenRecorte: productoExistente.imagenRecorte,
         colorAcento: productoExistente.colorAcento,
@@ -284,55 +290,35 @@ export default function FormProducto({
             <CampoPrecio
               id="p-descuento"
               etiqueta="Precio con descuento"
-              ayuda="El precio rebajado que se activa al pasar los kilos de más abajo."
+              ayuda="El precio rebajado que se activa al pasar los kilos de más abajo. Vacío = este producto no tiene descuento por volumen."
               valor={datos.precioDescuento}
               onChange={(v) => actualizar("precioDescuento", v)}
               sufijo={`/${datos.unidad}`}
             />
 
-            <div>
-              <CampoPrecio
-                id="p-caja"
-                etiqueta="Precio por caja"
-                valor={datos.precioCaja}
-                onChange={(v) => actualizar("precioCaja", v)}
-              />
-              <label htmlFor="p-kg-caja" className="mt-2 block text-xs text-tinta-suave">
-                ¿Cuántos kilos trae la caja?
-              </label>
-              <input
-                id="p-kg-caja"
-                type="number"
-                min={0}
-                value={datos.kilosPorCaja ?? ""}
-                onChange={(e) =>
-                  actualizar("kilosPorCaja", e.target.value === "" ? null : Number(e.target.value))
-                }
-                className="mt-1 w-full rounded-xl border border-tinta/15 px-3 py-2 text-sm outline-none transition-colors focus:border-cyan-400"
-              />
-            </div>
+            <FormatoConCasilla
+              id="caja"
+              etiquetaPrecio="Precio por caja"
+              etiquetaKilos="¿Cuántos kilos trae la caja?"
+              marcado={datos.mostrarCaja}
+              onMarcar={(v) => actualizar("mostrarCaja", v)}
+              precio={datos.precioCaja}
+              onPrecio={(v) => actualizar("precioCaja", v)}
+              kilos={datos.kilosPorCaja}
+              onKilos={(v) => actualizar("kilosPorCaja", v)}
+            />
 
-            <div>
-              <CampoPrecio
-                id="p-bin"
-                etiqueta="Precio por bin"
-                valor={datos.precioBin}
-                onChange={(v) => actualizar("precioBin", v)}
-              />
-              <label htmlFor="p-kg-bin" className="mt-2 block text-xs text-tinta-suave">
-                ¿Cuántos kilos trae el bin? Son aprox. {KILOS_BIN_REFERENCIA} kg de fruta.
-              </label>
-              <input
-                id="p-kg-bin"
-                type="number"
-                min={0}
-                value={datos.kilosPorBin ?? ""}
-                onChange={(e) =>
-                  actualizar("kilosPorBin", e.target.value === "" ? null : Number(e.target.value))
-                }
-                className="mt-1 w-full rounded-xl border border-tinta/15 px-3 py-2 text-sm outline-none transition-colors focus:border-cyan-400"
-              />
-            </div>
+            <FormatoConCasilla
+              id="bin"
+              etiquetaPrecio="Precio por bin"
+              etiquetaKilos={`¿Cuántos kilos trae el bin? Son aprox. ${KILOS_BIN_REFERENCIA} kg de fruta.`}
+              marcado={datos.mostrarBin}
+              onMarcar={(v) => actualizar("mostrarBin", v)}
+              precio={datos.precioBin}
+              onPrecio={(v) => actualizar("precioBin", v)}
+              kilos={datos.kilosPorBin}
+              onKilos={(v) => actualizar("kilosPorBin", v)}
+            />
           </div>
 
           <div className="mt-5 border-t border-tinta/10 pt-5">
@@ -344,18 +330,38 @@ export default function FormProducto({
                 id="p-kilos-descuento"
                 type="number"
                 min={1}
-                value={datos.kilosDescuento}
-                onChange={(e) => actualizar("kilosDescuento", Number(e.target.value) || 1)}
-                className="w-24 rounded-xl border border-tinta/15 px-3 py-2 outline-none transition-colors focus:border-cyan-400"
+                value={datos.kilosDescuento ?? ""}
+                placeholder="Vacío"
+                onChange={(e) =>
+                  actualizar(
+                    "kilosDescuento",
+                    e.target.value === "" ? null : Math.max(1, Number(e.target.value))
+                  )
+                }
+                className="w-28 rounded-xl border border-tinta/15 px-3 py-2 outline-none transition-colors focus:border-cyan-400"
               />
               <span className="text-tinta-suave">{datos.unidad}</span>
             </div>
             <p className="mt-1.5 text-xs text-tinta-suave">
               Es la línea donde cambia el precio: sobre esta cantidad, la página y la
-              calculadora pasan solas al precio con descuento. El pedido más chico que se
-              acepta es de {pedidoMinimo} kg, así que poner menos que eso no cambia
-              nada — el descuento saldría siempre.
+              calculadora pasan solas al precio con descuento. Vacío significa que este
+              producto no tiene descuento por volumen. El pedido más chico que se acepta
+              es de {pedidoMinimo} kg, así que poner menos que eso no cambia nada — el
+              descuento saldría siempre.
             </p>
+            {datos.precioDescuento != null && datos.kilosDescuento == null && (
+              <p className="mt-2 text-xs" style={{ color: "var(--color-naranja-texto)" }}>
+                Pusiste un precio con descuento pero no desde cuántos {datos.unidad} se
+                aplica, así que nadie lo va a ver. Llena los dos campos o deja los dos
+                vacíos.
+              </p>
+            )}
+            {datos.precioDescuento == null && datos.kilosDescuento != null && (
+              <p className="mt-2 text-xs" style={{ color: "var(--color-naranja-texto)" }}>
+                Marcaste desde cuántos {datos.unidad} aplica el descuento, pero falta el
+                precio rebajado.
+              </p>
+            )}
           </div>
 
           <p className="mt-4 text-xs text-tinta-suave">
@@ -515,6 +521,73 @@ export default function FormProducto({
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * Un formato de venta (caja o bin): la casilla manda si sale en el detalle del
+ * producto, y el precio queda guardado aunque la casilla esté apagada, así que
+ * volver a mostrarlo no obliga a escribirlo de nuevo.
+ */
+function FormatoConCasilla({
+  id,
+  etiquetaPrecio,
+  etiquetaKilos,
+  marcado,
+  onMarcar,
+  precio,
+  onPrecio,
+  kilos,
+  onKilos,
+}: {
+  id: string;
+  etiquetaPrecio: string;
+  etiquetaKilos: string;
+  marcado: boolean;
+  onMarcar: (v: boolean) => void;
+  precio: number | null;
+  onPrecio: (v: number | null) => void;
+  kilos: number | null;
+  onKilos: (v: number | null) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-tinta/10 p-4">
+      <label className="flex items-center gap-2.5 text-sm font-semibold text-tinta">
+        <input
+          type="checkbox"
+          checked={marcado}
+          onChange={(e) => onMarcar(e.target.checked)}
+          className="h-4 w-4 accent-[var(--color-verde-600)]"
+        />
+        Mostrar en el detalle
+      </label>
+      <p className="mt-1 text-xs text-tinta-suave">
+        {marcado
+          ? "Sale en “Más detalles”, en la tarjeta del producto."
+          : "Queda guardado, pero no se muestra en la página."}
+      </p>
+
+      <div className="mt-3" style={{ opacity: marcado ? 1 : 0.55 }}>
+        <CampoPrecio id={`p-${id}`} etiqueta={etiquetaPrecio} valor={precio} onChange={onPrecio} />
+        <label htmlFor={`p-kg-${id}`} className="mt-2 block text-xs text-tinta-suave">
+          {etiquetaKilos}
+        </label>
+        <input
+          id={`p-kg-${id}`}
+          type="number"
+          min={0}
+          value={kilos ?? ""}
+          onChange={(e) => onKilos(e.target.value === "" ? null : Number(e.target.value))}
+          className="mt-1 w-full rounded-xl border border-tinta/15 px-3 py-2 text-sm outline-none transition-colors focus:border-cyan-400"
+        />
+      </div>
+
+      {marcado && precio == null && (
+        <p className="mt-2 text-xs" style={{ color: "var(--color-naranja-texto)" }}>
+          Marcado pero sin precio: no va a salir hasta que le pongas uno.
+        </p>
+      )}
     </div>
   );
 }

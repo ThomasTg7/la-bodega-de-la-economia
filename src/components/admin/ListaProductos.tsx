@@ -160,10 +160,14 @@ function FilaProducto({
           </span>
         </p>
         <p className="text-tinta-suave">
-          Desde {producto.kilosDescuento} {producto.unidad}{" "}
-          <span className="font-semibold text-tinta">
-            {producto.precioDescuento != null ? clp(producto.precioDescuento) : "—"}
-          </span>
+          {producto.precioDescuento != null && producto.kilosDescuento != null ? (
+            <>
+              Desde {producto.kilosDescuento} {producto.unidad}{" "}
+              <span className="font-semibold text-tinta">{clp(producto.precioDescuento)}</span>
+            </>
+          ) : (
+            "Sin descuento por volumen"
+          )}
         </p>
       </div>
 
