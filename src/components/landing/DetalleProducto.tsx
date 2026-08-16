@@ -69,9 +69,9 @@ export default function DetalleProducto({ producto, pedidoMinimo, onCerrar, onCo
         initial={reducido ? false : { opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: EASE_SALIDA }}
-        className="relative flex max-h-[92svh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] bg-white shadow-[var(--shadow-flotante)] outline-none sm:rounded-[22px]"
+        className="relative flex max-h-[96svh] min-h-[70svh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] bg-white shadow-[var(--shadow-flotante)] outline-none sm:max-h-[92svh] sm:min-h-0 sm:rounded-[22px]"
       >
-        <div className="relative aspect-[16/10] shrink-0">
+        <div className="relative aspect-[2/1] shrink-0 sm:aspect-[16/10]">
           <Image
             src={texturaDe(producto)}
             alt={producto.nombre}

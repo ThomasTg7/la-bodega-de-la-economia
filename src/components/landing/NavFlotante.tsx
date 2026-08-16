@@ -91,10 +91,10 @@ export default function NavFlotante() {
         animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
         transition={{ duration: visible ? 0.3 : 0.5, ease: EASE_SUAVE }}
         style={{ pointerEvents: visible ? "auto" : "none" }}
-        className="fixed top-5 left-1/2 z-50 -translate-x-1/2"
+        className="fixed top-3 left-1/2 z-50 -translate-x-1/2 md:top-5"
       >
         <div
-          className="flex items-center gap-1 rounded-full border px-3 py-2 shadow-[var(--shadow-suave)]"
+          className="flex items-center gap-1 rounded-full border px-2.5 py-1.5 shadow-[var(--shadow-suave)] md:px-3 md:py-2"
           style={{
             background: "rgba(255,255,255,.78)",
             borderColor: "rgba(11,43,34,.08)",
@@ -103,7 +103,13 @@ export default function NavFlotante() {
           }}
         >
           <a href="#" aria-label="Inicio" className="mr-1 shrink-0">
-            <Image src="/logo.webp" width={32} height={32} alt="" className="rounded-full" />
+            <Image
+              src="/logo.webp"
+              width={32}
+              height={32}
+              alt=""
+              className="h-7 w-7 rounded-full md:h-8 md:w-8"
+            />
           </a>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -139,7 +145,7 @@ export default function NavFlotante() {
             type="button"
             onClick={() => setMenuAbierto(true)}
             aria-label="Abrir menú"
-            className="ml-1 flex h-11 w-11 items-center justify-center rounded-full text-verde-700 md:hidden"
+            className="ml-1 flex h-10 w-10 items-center justify-center rounded-full text-verde-700 md:hidden"
           >
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { Producto } from "@prisma/client";
 import { AnimatePresence, motion, useInView } from "motion/react";
@@ -27,11 +28,31 @@ const BLUR_POR_SLUG: Record<string, string> = {
   mandarina: BLUR_TEXTURAS.mandarinas,
 };
 
+/**
+ * `false` en el servidor y `true` una vez hidratado. El detalle se monta en
+ * <body> con un portal y para eso hace falta `document`, que en el servidor no
+ * existe. Va por useSyncExternalStore y no por un estado con efecto: es
+ * exactamente el caso para el que existe —dos snapshots distintos, servidor y
+ * cliente— y no dispara un render en cascada al montar.
+ */
+function sinSuscripcion() {
+  return () => {};
+}
+
+function useEstaEnElNavegador() {
+  return useSyncExternalStore(
+    sinSuscripcion,
+    () => true,
+    () => false
+  );
+}
+
 export default function TarjetaProducto({ producto, indice, pedidoMinimo }: Props) {
   const { abrir } = useBurbujaWhatsApp();
   const precioRef = useRef<HTMLDivElement>(null);
   const precioEnVista = useInView(precioRef, { once: true, amount: 0.4 });
   const [detalleAbierto, setDetalleAbierto] = useState(false);
+  const montado = useEstaEnElNavegador();
 
   // La página de atrás no se mueve mientras el detalle está abierto, y vuelve
   // a moverse apenas se cierra — sin esperar a que termine la animación.
@@ -179,28 +200,37 @@ export default function TarjetaProducto({ producto, indice, pedidoMinimo }: Prop
         </div>
       </motion.article>
 
-      <AnimatePresence>
-        {detalleAbierto && (
-          <motion.div
-            key="detalle"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-6"
-          >
-            <DetalleProducto
-              producto={producto}
-              pedidoMinimo={pedidoMinimo}
-              onCerrar={() => setDetalleAbierto(false)}
-              onCotizar={() => {
-                setDetalleAbierto(false);
-                cotizar();
-              }}
-            />
-          </motion.div>
+      {/* Va pegado al <body> y no acá adentro: la tarjeta y sus envoltorios
+          animados llevan `transform`, y un ancestro transformado hace que
+          `position: fixed` se mida contra él en vez de contra la ventana. El
+          diálogo terminaba con el ancho de la tarjeta — 158px en un teléfono,
+          con el catálogo a dos columnas — en lugar de ocupar la pantalla. */}
+      {montado &&
+        createPortal(
+          <AnimatePresence>
+            {detalleAbierto && (
+              <motion.div
+                key="detalle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-6"
+              >
+                <DetalleProducto
+                  producto={producto}
+                  pedidoMinimo={pedidoMinimo}
+                  onCerrar={() => setDetalleAbierto(false)}
+                  onCotizar={() => {
+                    setDetalleAbierto(false);
+                    cotizar();
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </SeccionEntrada>
   );
 }
