@@ -121,9 +121,19 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
               izquierda queda en 691px a 1440, así que el techo de 6.5rem
               (104px → 641px) entra con holgura. El tramo md (768–1023) va
               aparte y más chico: ahí la columna cae a ~337px y con el vw de
-              lg el título se partía. */}
+              lg el título se partía.
+
+              El `min()` de lg es por el alto, no por el ancho. Con solo vw el
+              título tocaba su techo cerca de los 1200px y de ahí para arriba
+              medía lo mismo en un notebook que en un monitor grande: 101px a
+              1440x820 y 104px a 1920x1080. Pero el notebook tiene 260px menos
+              de alto, así que la portada le quedaba al ras (medido: 814px de
+              contenido en 820 de pantalla) y la letra se veía enorme. El
+              10.2svh muerde solo cuando la pantalla es baja: a 1080 da 110 y
+              pierde contra el techo de 104, así que el monitor grande queda
+              igual que antes; a 820 da 84 y a 720 da 73. */}
           <h1
-            className="mt-4 font-titulo text-[clamp(2.6rem,13.6vw,5.5rem)] md:mt-5 text-white md:text-[clamp(2.6rem,5.4vw,4rem)] lg:text-[clamp(3rem,7vw,6.5rem)]"
+            className="mt-4 font-titulo text-[clamp(2.6rem,13.6vw,5.5rem)] md:mt-5 text-white md:text-[clamp(2.6rem,5.4vw,4rem)] lg:text-[clamp(3rem,min(6.6vw,10.2svh),6.5rem)]"
             style={{
               lineHeight: 1.02,
               letterSpacing: "-0.015em",
@@ -159,7 +169,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE_SALIDA, delay: 0.5 }}
-              className="mt-5 text-[length:var(--text-cuerpo)] text-white/85 md:mt-6 md:text-[1.05rem] lg:text-[1.3rem]"
+              className="mt-5 text-[length:var(--text-cuerpo)] text-white/85 md:mt-6 md:text-[1.05rem] lg:text-[min(1.3rem,2.1svh)]"
               style={{ lineHeight: 1.6, maxWidth: "42ch" }}
             >
               {eslogan}
@@ -188,7 +198,7 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
           // lado y el bloque entero sigue entrando, en uno de 844 vale 34 y se
           // ve más foto. Con un valor fijo, los teléfonos chicos se pasaban de
           // largo justo por esos 16px.
-          className="relative mx-auto w-full max-w-[300px] py-[4svh] sm:py-0 md:mx-0 md:max-w-none lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:ml-auto lg:flex lg:max-w-[425px] lg:items-center"
+          className="relative mx-auto w-full max-w-[300px] py-[4svh] sm:py-0 md:mx-0 md:max-w-none lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:ml-auto lg:flex lg:max-w-[375px] lg:items-center"
         >
           {/* La entrada va en su propia capa: el `y` de la tarjeta es el del
               parallax de scroll, y dos animaciones sobre el mismo eje en el
@@ -209,7 +219,12 @@ export default function Hero({ eslogan, direccion, ciudad, sellos, mapaUrl }: Pr
                 title="Mapa de La bodega de la economía"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="block h-[140px] w-full border-0 sm:h-[290px] md:h-[320px] lg:h-[400px]"
+                // El alto de lg va en clamp por la misma razón que el título:
+                // 400px fijos ocupaban lo mismo en un notebook que en un
+                // monitor, y en el notebook eso era casi la mitad de la
+                // pantalla. A 1080 el 40svh pierde contra el techo de 350 y
+                // queda igual; a 820 da 328 y a 720 baja a 288.
+                className="block h-[140px] w-full border-0 sm:h-[290px] md:h-[320px] lg:h-[clamp(280px,40svh,350px)]"
               />
 
               <a

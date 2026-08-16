@@ -23,7 +23,7 @@ export default function Cifras() {
 
       <h2
         className="mt-4 font-titulo text-white"
-        style={{ fontSize: "clamp(2rem, 4.6vw, 3.4rem)", lineHeight: 1.02 }}
+        style={{ fontSize: "var(--text-h2-seccion)", lineHeight: 1.02 }}
       >
         <TextoRevelado texto="Horarios" modo="palabra" as="span" />
       </h2>

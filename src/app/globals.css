@@ -39,6 +39,15 @@
   --text-h2: clamp(2rem, 6vw, 4.5rem);
   --text-h3: clamp(1.25rem, 3vw, 2rem);
   --text-cuerpo: clamp(1rem, 1.6vw, 1.125rem);
+
+  /* Títulos de sección. Son dos escalas y tienen que serlo: el piso de móvil
+     es lo único que cambia. Las secciones de título corto ("Horarios",
+     "Siempre precio por mayor") aguantan 2rem; las de título largo ("Una
+     bodega, no un intermediario", "Cuatro pasos y obtén nuestros productos")
+     necesitan bajar a 1.85rem o se parten feo en un teléfono. */
+  --text-h2-seccion: clamp(2rem, 4.6vw, 3.4rem);
+  --text-h2-seccion-larga: clamp(1.85rem, 4.6vw, 3.4rem);
+  --text-franja: clamp(2.1rem, 7.4vw, 4.4rem);
 }
 
 :root {
@@ -52,6 +61,33 @@
   --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-suave: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-rebote: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Notebooks.
+ *
+ * Los títulos se calculaban solo con vw, así que tocaban su techo cerca de
+ * los 1200px de ancho y de ahí para arriba medían igual en un notebook que
+ * en un monitor grande. Medido en el navegador: el h2 del catálogo daba 54px
+ * a 1440x820 y 54px a 1920x1080; el de la calculadora, 72 y 72. Lo que sí
+ * cambia entre los dos es el alto —820 contra 1080—, y por eso en el
+ * notebook la misma letra se ve enorme: hay 260px menos de pantalla para
+ * ponerla.
+ *
+ * El `min()` con svh muerde solo cuando la pantalla es baja. A 1080 el
+ * término de svh queda por encima del techo del clamp y pierde, así que el
+ * monitor grande se ve exactamente igual que antes; a 820 y a 720 manda el
+ * svh y los títulos bajan alrededor de un 16% y un 26%.
+ *
+ * Va desde 1024 para que el teléfono no se entere, en ninguna orientación:
+ * un teléfono acostado tiene el alto de una pantalla baja y estos min()
+ * también le habrían achicado los títulos. */
+@media (min-width: 1024px) {
+  :root {
+    --text-h2: clamp(2rem, min(6vw, 7.4svh), 4.5rem);
+    --text-h2-seccion: clamp(2rem, min(4.6vw, 5.6svh), 3.4rem);
+    --text-h2-seccion-larga: clamp(1.85rem, min(4.6vw, 5.6svh), 3.4rem);
+    --text-franja: clamp(2.1rem, min(7.4vw, 7.2svh), 4.4rem);
+  }
 }
 
 html,

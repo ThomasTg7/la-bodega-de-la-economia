@@ -26,7 +26,7 @@ export default function Catalogo({ productos, titulo, bajada, pedidoMinimo }: Pr
             </p>
             <h2
               className="mt-4 font-titulo text-verde-700"
-              style={{ fontSize: "clamp(2rem, 4.6vw, 3.4rem)", lineHeight: 1.02 }}
+              style={{ fontSize: "var(--text-h2-seccion)", lineHeight: 1.02 }}
             >
               <TextoRevelado texto={titulo} modo="palabra" as="span" />
             </h2>

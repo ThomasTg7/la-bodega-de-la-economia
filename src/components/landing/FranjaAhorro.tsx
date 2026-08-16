@@ -22,7 +22,7 @@ export default function FranjaAhorro() {
       <h2
         className="mx-auto font-titulo text-white"
         style={{
-          fontSize: "clamp(2.1rem, 7.4vw, 4.4rem)",
+          fontSize: "var(--text-franja)",
           lineHeight: 1.1,
           // 20ch: con menos, "PRECIOS AL ALCANCE" se parte en móvil y deja
           // una palabra suelta en su propia línea.

@@ -60,7 +60,7 @@ export default function Pasos() {
           </p>
           <h2
             className="mt-4 font-titulo text-verde-700"
-            style={{ fontSize: "clamp(1.85rem, 4.6vw, 3.4rem)", lineHeight: 1.06 }}
+            style={{ fontSize: "var(--text-h2-seccion-larga)", lineHeight: 1.06 }}
           >
             <TextoRevelado texto="Cuatro pasos y obtén nuestros productos" modo="palabra" as="span" />
           </h2>
