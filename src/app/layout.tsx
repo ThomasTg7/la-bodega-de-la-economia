@@ -19,7 +19,11 @@ const plusJakarta = Plus_Jakarta_Sans({
   preload: false,
 });
 
-const TITULO = "La bodega de la economía — Paltas, limones y naranjas en Rancagua";
+// Es el titulo de la pestaña del navegador, el enlace azul en Google y el
+// titular de la preview al pegar el link. Los tres salen de acá, así que
+// cambiarlo los cambia juntos — que es lo que se quiere: dice lo mismo que el
+// titular de la og-image.
+const TITULO = "La Bodega de la Economía — Precios al Alcance de su Bolsillo";
 const DESCRIPCION =
   "Un emprendimiento local para locales, donde ahorrar es la única opción. Paltas, limones y naranjas siempre al por mayor en Rancagua, con descuento por volumen.";
 
