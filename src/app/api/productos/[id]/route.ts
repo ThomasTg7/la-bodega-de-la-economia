@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { leerSesion } from "@/lib/sesion";
-import { esquemaProductoParcial } from "@/lib/validaciones";
+import { esquemaProductoParcial, soloCamposEnviados } from "@/lib/validaciones";
 
 type Contexto = { params: Promise<{ id: string }> };
 
@@ -31,8 +31,14 @@ export async function PATCH(request: NextRequest, { params }: Contexto) {
     );
   }
 
+  // Solo los campos que vinieron en el cuerpo: ver soloCamposEnviados().
+  const cambios = soloCamposEnviados(cuerpo, datos.data);
+  if (Object.keys(cambios).length === 0) {
+    return NextResponse.json({ error: "No mandaste ningún campo que cambiar." }, { status: 400 });
+  }
+
   try {
-    const producto = await db.producto.update({ where: { id }, data: datos.data });
+    const producto = await db.producto.update({ where: { id }, data: cambios });
     revalidatePath("/");
     return NextResponse.json(producto);
   } catch {

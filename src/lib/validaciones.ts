@@ -59,6 +59,25 @@ export const esquemaProducto = z.object({
 
 export const esquemaProductoParcial = esquemaProducto.partial();
 
+/**
+ * Deja del objeto validado solo los campos que venían en el cuerpo original.
+ *
+ * Hace falta porque `.partial()` no apaga los `.default()`: al parsear un
+ * PATCH de `{ activo: false }`, zod devuelve además descripcion "",
+ * imagenTextura "", colorAcento "#30CFB2", orden 0 y compañía. Mandado tal
+ * cual a un `update` de Prisma, apagar un producto le borraba las imágenes,
+ * el texto y su lugar en la lista. Un PATCH tiene que tocar lo que le
+ * mandaron y nada más, así que el cuerpo crudo es quien manda qué columnas se
+ * escriben; zod sigue decidiendo con qué valores.
+ */
+export function soloCamposEnviados<T extends object>(cuerpo: unknown, datos: T): Partial<T> {
+  if (typeof cuerpo !== "object" || cuerpo === null) return {};
+  const enviados = new Set(Object.keys(cuerpo));
+  return Object.fromEntries(
+    Object.entries(datos).filter(([campo]) => enviados.has(campo))
+  ) as Partial<T>;
+}
+
 export const esquemaAcceso = z.object({
   email: z.string().trim().toLowerCase().email(),
   nota: z.string().trim().max(120).default(""),
