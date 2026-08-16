@@ -13,60 +13,42 @@ const ENLACES = [
   { id: "contacto", label: "Contacto" },
 ];
 
+/**
+ * Cuánto aguanta el nav a la vista sin que nadie mueva la página. El nav
+ * acompaña al scroll: aparece con cualquier movimiento y se retira cuando la
+ * persona lleva un rato quieta. Se va por tiempo y no por dirección porque
+ * quedarse quieto es lo único que dice "no lo estoy usando"; seguir bajando
+ * no lo dice.
+ */
+const OCULTAR_TRAS_MS = 4000;
+
 export default function NavFlotante() {
   const { scrollY } = useScroll();
   const [visible, setVisible] = useState(false);
   const [activo, setActivo] = useState("catalogo");
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const ultimoY = useRef(0);
-  const pasadoUmbral = useRef(false);
-  const acumulado = useRef(0);
-  const direccion = useRef<"arriba" | "abajo" | null>(null);
-
-  // Umbral de DISTANCIA acumulada (no por-tick): un scroll de pocos px no
-  // debe prender y apagar el nav en el mismo frame. Solo un desplazamiento
-  // sostenido de +60px en un sentido cambia su visibilidad.
-  const DISTANCIA_PARA_CAMBIAR = 60;
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useMotionValueEvent(scrollY, "change", (y) => {
-    const umbral = window.innerHeight * 0.7;
-    const pasado = y > umbral;
+    if (temporizador.current) clearTimeout(temporizador.current);
 
-    if (!pasado) {
+    // Arriba del todo (primera pantalla) no aparece: ahí manda la portada.
+    if (y <= window.innerHeight * 0.7) {
       setVisible(false);
-      pasadoUmbral.current = false;
-      acumulado.current = 0;
-      direccion.current = null;
-      ultimoY.current = y;
       return;
     }
 
-    // Recién cruzó el umbral: aparece siempre, sin importar la dirección.
-    if (!pasadoUmbral.current) {
-      pasadoUmbral.current = true;
-      setVisible(true);
-      acumulado.current = 0;
-      direccion.current = null;
-      ultimoY.current = y;
-      return;
-    }
-
-    const delta = y - ultimoY.current;
-    ultimoY.current = y;
-    if (delta === 0) return;
-
-    const sentido = delta > 0 ? "abajo" : "arriba";
-    if (sentido !== direccion.current) {
-      direccion.current = sentido;
-      acumulado.current = 0;
-    }
-    acumulado.current += Math.abs(delta);
-
-    if (acumulado.current > DISTANCIA_PARA_CAMBIAR) {
-      setVisible(sentido === "arriba");
-      acumulado.current = 0;
-    }
+    setVisible(true);
+    temporizador.current = setTimeout(() => setVisible(false), OCULTAR_TRAS_MS);
   });
+
+  // Un temporizador pendiente al desmontar dispararía un setState sobre un
+  // componente que ya no está.
+  useEffect(() => {
+    return () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+    };
+  }, []);
 
   useEffect(() => {
     const secciones = ENLACES.map((e) => document.getElementById(e.id)).filter(
@@ -107,7 +89,7 @@ export default function NavFlotante() {
       <motion.nav
         initial={false}
         animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: EASE_SUAVE }}
+        transition={{ duration: visible ? 0.3 : 0.5, ease: EASE_SUAVE }}
         style={{ pointerEvents: visible ? "auto" : "none" }}
         className="fixed top-5 left-1/2 z-50 -translate-x-1/2"
       >
