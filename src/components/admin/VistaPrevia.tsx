@@ -14,6 +14,12 @@ export type DatosVista = {
   precioBase: number | null;
   precioDescuento: number | null;
   kilosDescuento: number | null;
+  precioCaja: number | null;
+  precioBin: number | null;
+  kilosPorCaja: number | null;
+  kilosPorBin: number | null;
+  mostrarCaja: boolean;
+  mostrarBin: boolean;
   imagenTextura: string;
   imagenRecorte: string;
   colorAcento: string;
@@ -35,6 +41,10 @@ type Pestana = (typeof PESTANAS)[number]["id"];
  */
 export default function VistaPrevia({ datos }: { datos: DatosVista }) {
   const [pestana, setPestana] = useState<Pestana>("catalogo");
+  // "Más detalles" acá abre lo mismo que abre en la página. Antes era un botón
+  // dibujado que no hacía nada, y la ficha —donde salen la caja, el bin y el
+  // descuento— no se podía revisar sin guardar y salir a mirar el sitio.
+  const [verDetalle, setVerDetalle] = useState(false);
   const reducido = useMovimientoReducido();
   const resorte = reducido ? { duration: 0 } : { type: "spring" as const, ...RESORTE_UI };
 
@@ -81,7 +91,11 @@ export default function VistaPrevia({ datos }: { datos: DatosVista }) {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.28, ease: EASE_SALIDA }}
             >
-              <VistaCatalogo datos={datos} />
+              {verDetalle ? (
+                <VistaDetalle datos={datos} onVolver={() => setVerDetalle(false)} />
+              ) : (
+                <VistaCatalogo datos={datos} onVerDetalle={() => setVerDetalle(true)} />
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -101,7 +115,13 @@ export default function VistaPrevia({ datos }: { datos: DatosVista }) {
 }
 
 /** Réplica de la tarjeta del catálogo de la página. */
-function VistaCatalogo({ datos }: { datos: DatosVista }) {
+function VistaCatalogo({
+  datos,
+  onVerDetalle,
+}: {
+  datos: DatosVista;
+  onVerDetalle: () => void;
+}) {
   // Mismo criterio que TarjetaProducto: manda el precio de lista y el
   // descuento va al lado. Si acá se desalinea, la vista previa miente.
   const precioGrande = datos.precioBase ?? datos.precioDescuento;
@@ -164,14 +184,149 @@ function VistaCatalogo({ datos }: { datos: DatosVista }) {
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="rounded-full border border-verde-700/25 py-2.5 text-center text-sm font-semibold text-verde-700">
+          <button
+            type="button"
+            onClick={onVerDetalle}
+            className="rounded-full border border-verde-700/25 py-2.5 text-center text-sm font-semibold text-verde-700 transition-colors hover:bg-cyan-100"
+          >
             Más detalles
-          </div>
+          </button>
           <div className="rounded-full bg-verde-700 py-2.5 text-center text-sm font-semibold text-white">
             Cotizar
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Réplica de la ficha que abre "Más detalles" en la página. Las condiciones
+ * son las mismas que las de DetalleProducto: el descuento pide sus dos
+ * mitades, y la caja y el bin piden estar marcados y tener precio. Si acá se
+ * desalinea, la vista previa miente.
+ */
+function VistaDetalle({ datos, onVolver }: { datos: DatosVista; onVolver: () => void }) {
+  const conDescuento = datos.precioDescuento != null && datos.kilosDescuento != null;
+  const conCaja = datos.mostrarCaja && datos.precioCaja != null;
+  const conBin = datos.mostrarBin && datos.precioBin != null;
+  const sinPrecios =
+    datos.precioBase == null && datos.precioDescuento == null && !conCaja && !conBin;
+
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-tinta/10 bg-white shadow-[var(--shadow-media)]">
+      <div className="relative aspect-[2/1] overflow-hidden bg-cyan-100">
+        {datos.imagenTextura ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={datos.imagenTextura} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <FaltaFoto texto="Falta la foto del catálogo" />
+        )}
+        <button
+          type="button"
+          onClick={onVolver}
+          className="absolute top-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-verde-700 shadow-sm"
+          aria-label="Volver a la tarjeta"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="p-5">
+        <h3 className="font-titulo text-verde-700" style={{ fontSize: 22, lineHeight: 1.15 }}>
+          {datos.nombre || "Nombre del producto"}
+        </h3>
+        {datos.descripcion && (
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-tinta-suave">
+            {datos.descripcion}
+          </p>
+        )}
+
+        <div className="mt-4 space-y-2">
+          {datos.precioBase != null && (
+            <FilaDetalle
+              titulo={`Precio por ${datos.unidad}`}
+              monto={clp(datos.precioBase)}
+              sufijo={`/${datos.unidad}`}
+              destacada
+            />
+          )}
+          {conDescuento && (
+            <FilaDetalle
+              titulo={`Desde ${datos.kilosDescuento} ${datos.unidad}`}
+              monto={clp(datos.precioDescuento!)}
+              sufijo={`/${datos.unidad}`}
+              acento
+            />
+          )}
+          {conCaja && (
+            <FilaDetalle
+              titulo="Por caja"
+              detalle={datos.kilosPorCaja ? `${datos.kilosPorCaja} kg` : undefined}
+              monto={clp(datos.precioCaja!)}
+            />
+          )}
+          {conBin && (
+            <FilaDetalle
+              titulo="Por bin"
+              detalle={datos.kilosPorBin ? `${datos.kilosPorBin} kg` : undefined}
+              monto={clp(datos.precioBin!)}
+            />
+          )}
+          {sinPrecios && (
+            <p className="rounded-xl bg-cyan-100 p-3 text-xs text-verde-700">
+              Sin ningún precio cargado, la ficha solo invita a escribir por WhatsApp.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 w-full rounded-full bg-verde-700 py-2.5 text-center text-sm font-semibold text-white">
+          Cotizar por WhatsApp
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilaDetalle({
+  titulo,
+  detalle,
+  monto,
+  sufijo,
+  destacada,
+  acento,
+}: {
+  titulo: string;
+  detalle?: string;
+  monto: string;
+  sufijo?: string;
+  destacada?: boolean;
+  acento?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between gap-3 rounded-xl px-3 py-2"
+      style={{ background: acento ? "rgba(245,205,7,.18)" : "rgba(11,43,34,.035)" }}
+    >
+      <div className="min-w-0">
+        <p className="text-xs font-semibold text-tinta">{titulo}</p>
+        {detalle && <p className="text-[11px] text-tinta-suave">{detalle}</p>}
+      </div>
+      <p className="flex shrink-0 items-baseline gap-1">
+        <span
+          className="font-titulo text-verde-600"
+          style={{
+            fontSize: destacada ? 20 : 16,
+            lineHeight: 1,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {monto}
+        </span>
+        {sufijo && <span className="text-[10px] font-semibold text-tinta-suave">{sufijo}</span>}
+      </p>
     </div>
   );
 }
