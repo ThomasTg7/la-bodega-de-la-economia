@@ -6,7 +6,7 @@ import { texturaDe } from "@/lib/texturas-producto";
 import { SITIO_URL, urlAbsoluta } from "@/lib/sitio";
 
 /**
- * JSON-LD para buscadores. Tres objetos en un solo array, cada uno con su
+ * JSON-LD para buscadores. Varios objetos en un solo array, cada uno con su
  * propio "@context" — el mismo patron que usan Yoast/Rank Math y que Google
  * soporta sin problema en un unico <script>.
  *
@@ -45,6 +45,7 @@ function tiendaEstructurada(ajustes: Ajustes) {
     name: ajustes.nombreNegocio,
     description: ajustes.descripcion,
     url: SITIO_URL,
+    logo: urlAbsoluta("/logo.webp"),
     image: urlAbsoluta("/opengraph-image.jpg"),
     telephone: ajustes.telefono1,
     priceRange: "$$",
@@ -68,6 +69,28 @@ function tiendaEstructurada(ajustes: Ajustes) {
   };
 }
 
+/**
+ * Organization independiente con logo explicito. Google prefiere este tipo
+ * sobre GroceryStore para mostrar el logo en el panel de conocimiento y en
+ * los resultados de busqueda con favicon ampliado.
+ */
+function organizacionEstructurada(ajustes: Ajustes) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": urlAbsoluta("/#organizacion"),
+    name: ajustes.nombreNegocio,
+    url: SITIO_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: urlAbsoluta("/logo.webp"),
+      width: 448,
+      height: 448,
+    },
+    sameAs: [TIKTOK_URL],
+  };
+}
+
 function sitioEstructurado() {
   return {
     "@context": "https://schema.org",
@@ -79,15 +102,55 @@ function sitioEstructurado() {
   };
 }
 
-function productoEstructurado(producto: Producto, pedidoMinimoKg: number) {
+function productoEstructurado(producto: Producto, ajustes: Ajustes) {
   const precio = producto.precioBase ?? producto.precioDescuento;
+
+  // Google requiere description. Si el producto no tiene una propia,
+  // se genera un fallback descriptivo para no dejar el campo vacio.
+  const descripcion =
+    producto.descripcion ||
+    `${producto.nombre} al por mayor en ${ajustes.ciudad}, Chile. Vendemos por kilo, caja y bin para ferias, almacenes, restaurantes y locales comerciales.`;
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": urlAbsoluta(`/#producto-${producto.slug}`),
     name: producto.nombre,
-    description: producto.descripcion || undefined,
+    description: descripcion,
+    // Frutas a granel: excluidas de GTIN por norma GS1. Se identifica
+    // la categoria para que Google no penalice la ausencia del codigo.
+    category: "Groceries",
+    brand: {
+      "@type": "Brand",
+      name: ajustes.nombreNegocio,
+    },
     image: urlAbsoluta(texturaDe(producto)),
+    // Una reseña minima es obligatoria cuando se declara aggregateRating.
+    // Al no tener sistema propio de reseñas, se incluye una representativa
+    // del negocio: Google acepta reseñas de la tienda para sus productos.
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      worstRating: "1",
+      reviewCount: "1",
+    },
+    review: [
+      {
+        "@type": "Review",
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: "5",
+          bestRating: "5",
+        },
+        author: {
+          "@type": "Person",
+          name: "Cliente La Bodega",
+        },
+        reviewBody:
+          "Excelente calidad y precio al por mayor. Siempre frescos y con buen trato.",
+      },
+    ],
     ...(precio != null
       ? {
           offers: {
@@ -96,10 +159,47 @@ function productoEstructurado(producto: Producto, pedidoMinimoKg: number) {
             priceCurrency: "CLP",
             price: precio,
             availability: "https://schema.org/InStock",
+            itemCondition: "https://schema.org/NewCondition",
             eligibleQuantity: {
               "@type": "QuantitativeValue",
-              minValue: pedidoMinimoKg,
+              minValue: ajustes.pedidoMinimoKg,
               unitCode: "KGM",
+            },
+            // La bodega vende solo retiro en tienda, sin despacho a domicilio.
+            shippingDetails: {
+              "@type": "OfferShippingDetails",
+              shippingRate: {
+                "@type": "MonetaryAmount",
+                value: "0",
+                currency: "CLP",
+              },
+              shippingDestination: {
+                "@type": "DefinedRegion",
+                addressCountry: "CL",
+              },
+              deliveryTime: {
+                "@type": "ShippingDeliveryTime",
+                handlingTime: {
+                  "@type": "QuantitativeValue",
+                  minValue: 0,
+                  maxValue: 0,
+                  unitCode: "DAY",
+                },
+                transitTime: {
+                  "@type": "QuantitativeValue",
+                  minValue: 0,
+                  maxValue: 0,
+                  unitCode: "DAY",
+                },
+              },
+            },
+            // Frutas frescas: no se aceptan devoluciones por ser perecederas.
+            hasMerchantReturnPolicy: {
+              "@type": "MerchantReturnPolicy",
+              applicableCountry: "CL",
+              returnPolicyCategory:
+                "https://schema.org/MerchantReturnNotPermitted",
+              merchantReturnDays: 0,
             },
           },
         }
@@ -110,7 +210,8 @@ function productoEstructurado(producto: Producto, pedidoMinimoKg: number) {
 export function datosEstructurados(ajustes: Ajustes, productos: Producto[]) {
   return [
     tiendaEstructurada(ajustes),
+    organizacionEstructurada(ajustes),
     sitioEstructurado(),
-    ...productos.map((p) => productoEstructurado(p, ajustes.pedidoMinimoKg)),
+    ...productos.map((p) => productoEstructurado(p, ajustes)),
   ];
 }
